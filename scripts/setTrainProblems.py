@@ -31,7 +31,7 @@ sys_path = 'system'
 bnd_path = '0.orig'
 
 
-for i in range(10):
+for i in range(1):
 
     tra_case_path = dir_path + '/tra' + str(i)
     system_path = tra_case_path + '/' + sys_path

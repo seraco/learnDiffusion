@@ -8,7 +8,7 @@ path = os.path.join(os.path.dirname( __file__ ), os.pardir, 'train')
 os.chdir(path)
 # os.system('ls')
 
-for i in range(10):
+for i in range(1):
     os.chdir(path + '/tra' + str(i))
     # os.system('ls')
     # os.chmod('Allmesh', S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import random
+from math import sqrt
 
 def generateFvSolution(file_path):
     with open(file_path, 'w') as fd:
@@ -166,19 +167,19 @@ def generateBlockMeshDict(file_path):
 
             vertices
             (
-                (-0.1 -0.05  -0.01)
-                ( 0.1 -0.05  -0.01)
-                ( 0.1  0.05  -0.01)
-                (-0.1  0.05  -0.01)
-                (-0.1 -0.05   0.01)
-                ( 0.1 -0.05   0.01)
-                ( 0.1  0.05   0.01)
-                (-0.1  0.05   0.01)
+                (-0.1 -0.1  -0.01)
+                ( 0.1 -0.1  -0.01)
+                ( 0.1  0.1  -0.01)
+                (-0.1  0.1  -0.01)
+                (-0.1 -0.1   0.01)
+                ( 0.1 -0.1   0.01)
+                ( 0.1  0.1   0.01)
+                (-0.1  0.1   0.01)
             );
 
             blocks
             (
-                hex (0 1 2 3 4 5 6 7) (30 10 1) simpleGrading (1 1 1)
+                hex (0 1 2 3 4 5 6 7) (256 256 1) simpleGrading (1 1 1)
             );
 
             edges
@@ -618,6 +619,8 @@ def generateMainSolidFvSolution(file_path):
         )
 
 def generateTopoSetDict(file_path):
+    shape = 'cyl' # 'box'/'cyl'
+
     Nx = 30
     Ny = 10
 
@@ -657,13 +660,17 @@ def generateTopoSetDict(file_path):
     z1 = minZ
     z2 = maxZ
 
+    if shape is 'box':
+        srcTp = 'boxToCell'
+        srcInStr = 'box ({} {} {}) ({} {} {});'.format(x1, y1, z1, x2, y2, z2)
+    else:
+        rds = sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        srcTp = 'cylinderToCell'
+        srcInStr = 'p1 ({} {} {}); p2 ({} {} {}); radius {};'.format(x1, y1, z1, x1, y1, z2, rds)
+
     data = {
-        'xCoor1': x1,
-        'xCoor2': x2,
-        'yCoor1': y1,
-        'yCoor2': y2,
-        'zCoor1': z1,
-        'zCoor2': z2,
+        'srcType': srcTp,
+        'srcInfoString': srcInStr,
     }
 
     with open(file_path, 'w') as fd:
@@ -693,10 +700,10 @@ def generateTopoSetDict(file_path):
                     name    heaterCellSet;
                     type    cellSet;
                     action  new;
-                    source  boxToCell;
+                    source  {srcType};
                     sourceInfo
                     {{
-                        box ({xCoor1} {yCoor1} {zCoor1})({xCoor2} {yCoor2} {zCoor2});
+                        {srcInfoString}
                     }}
                 }}
                 {{
