@@ -120,7 +120,7 @@ def generateHeaterThermoProperties(file_path):
 
                 transport
                 {
-                    kappa   0;
+                    kappa   143;
                 }
 
                 thermodynamics

@@ -104,7 +104,7 @@ venv.bak/
 .mypy_cache/
 
 # project folders
-/video
+/media
 /train
 
 # Mac OS .DS_Store

@@ -23,11 +23,6 @@ def generateFvSolution(file_path):
             }
             // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-            PIMPLE
-            {
-                nOuterCorrectors 1;
-            }
-
             // ************************************************************************* //
             """
         )
@@ -102,42 +97,47 @@ def generateControlDict(file_path):
             }
             // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-            application     chtMultiRegionFoam;
+            application     chtMultiRegionSimpleFoam;
 
-            startFrom       latestTime;
+            startFrom       startTime;
 
-            startTime       0.001;
+            startTime       0;
 
             stopAt          endTime;
 
-            endTime         100;
+            endTime         300;
 
-            deltaT          0.001;
+            deltaT          1;
 
-            writeControl    adjustableRunTime;
+            writeControl    timeStep;
 
             writeInterval   10;
 
-            purgeWrite      0;
+            purgeWrite      10;
 
             writeFormat     ascii;
 
-            writePrecision  8;
+            writePrecision  7;
 
-            writeCompression off;
+            writeCompression uncompressed;
 
             timeFormat      general;
 
             timePrecision   6;
 
-            runTimeModifiable yes;
+            runTimeModifiable true;
 
-            maxCo           0.6;
+            functions
+            {
+                #includeFunc  residuals
+            }
+
+            // maxCo           0.6;
 
             // Maximum diffusion number
-            maxDi           10.0;
+            // maxDi           10.0;
 
-            adjustTimeStep  yes;
+            // adjustTimeStep  yes;
 
             // ************************************************************************* //
             """
@@ -284,14 +284,14 @@ def generateHeaterChangeDict(file_path):
 
             T
             {
-                internalField   uniform 300;
+                internalField   uniform 500;
 
                 boundaryField
                 {
                     ".*"
                     {
-                        type            zeroGradient;
-                        value           uniform 300;
+                        type            fixedValue;
+                        value           uniform 500;
                     }
                     "heater_to_mainSolid"
                     {
@@ -345,7 +345,7 @@ def generateHeaterFvSchemes(file_path):
 
             ddtSchemes
             {
-                default Euler;
+                default steadyState;
             }
 
             gradSchemes
@@ -361,7 +361,7 @@ def generateHeaterFvSchemes(file_path):
             laplacianSchemes
             {
                 default             none;
-                laplacian(alpha,h)  Gauss linear corrected;
+                laplacian(alpha,h)  Gauss linear uncorrected;
             }
 
             interpolationSchemes
@@ -371,7 +371,7 @@ def generateHeaterFvSchemes(file_path):
 
             snGradSchemes
             {
-                default         corrected;
+                default         uncorrected;
             }
 
 
@@ -408,18 +408,19 @@ def generateHeaterFvSolution(file_path):
                     tolerance        1e-06;
                     relTol           0.1;
                 }
-
-                hFinal
-                {
-                    $h;
-                    tolerance        1e-06;
-                    relTol           0;
-                }
             }
 
-            PIMPLE
+            SIMPLE
             {
                 nNonOrthogonalCorrectors 0;
+            }
+
+            relaxationFactors
+            {
+                equations
+                {
+                    h               0.7;
+                }
             }
 
             // ************************************************************************* //
@@ -490,7 +491,7 @@ def generateMainSolidChangeDict(file_path):
                         type            compressible::turbulentTemperatureCoupledBaffleMixed;
                         Tnbr            T;
                         kappaMethod     solidThermo;
-                        value           uniform 300;
+                        value           uniform 500;
                     }
 
                     // heater_to_leftSolid
@@ -503,11 +504,11 @@ def generateMainSolidChangeDict(file_path):
                     //     value           uniform 300;
                     // }
 
-                    minY
-                    {
-                        type            fixedValue;
-                        value           uniform 500;
-                    }
+                    // minY
+                    // {
+                    //     type            fixedValue;
+                    //     value           uniform 500;
+                    // }
                 }
             }
 
@@ -537,7 +538,7 @@ def generateMainSolidFvSchemes(file_path):
 
             ddtSchemes
             {
-                default Euler;
+                default steadyState;
             }
 
             gradSchemes
@@ -553,7 +554,7 @@ def generateMainSolidFvSchemes(file_path):
             laplacianSchemes
             {
                 default             none;
-                laplacian(alpha,h)  Gauss linear corrected;
+                laplacian(alpha,h)  Gauss linear uncorrected;
             }
 
             interpolationSchemes
@@ -563,7 +564,7 @@ def generateMainSolidFvSchemes(file_path):
 
             snGradSchemes
             {
-                default         corrected;
+                default         uncorrected;
             }
 
 
@@ -600,18 +601,19 @@ def generateMainSolidFvSolution(file_path):
                     tolerance        1e-06;
                     relTol           0.1;
                 }
-
-                hFinal
-                {
-                    $h;
-                    tolerance        1e-06;
-                    relTol           0;
-                }
             }
 
-            PIMPLE
+            SIMPLE
             {
                 nNonOrthogonalCorrectors 0;
+            }
+
+            relaxationFactors
+            {
+                equations
+                {
+                    h               0.7;
+                }
             }
 
             // ************************************************************************* //
@@ -626,8 +628,8 @@ def generateTopoSetDict(file_path):
 
     minX = -0.09
     maxX =  0.09
-    minY = -0.049
-    maxY =  0.049
+    minY = -0.09
+    maxY =  0.09
     minZ = -0.01
     maxZ =  0.01
 
@@ -664,7 +666,7 @@ def generateTopoSetDict(file_path):
         srcTp = 'boxToCell'
         srcInStr = 'box ({} {} {}) ({} {} {});'.format(x1, y1, z1, x2, y2, z2)
     else:
-        rds = sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        rds = abs(x2 - x1) / 2
         srcTp = 'cylinderToCell'
         srcInStr = 'p1 ({} {} {}); p2 ({} {} {}); radius {};'.format(x1, y1, z1, x1, y1, z2, rds)
 
@@ -748,4 +750,23 @@ def generateTopoSetDict(file_path):
 
             // ************************************************************************* //
             """.format(**data)
+        )
+
+def generateResiduals(file_path):
+    with open(file_path, 'w') as fd:
+        fd.write(
+            """
+            /*--------------------------------*- C++ -*----------------------------------*\\
+            | =========                 |                                                 |
+            | \\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+            |  \\\    /   O peration     | Version:  plus                                  |
+            |   \\\  /    A nd           | Web:      www.OpenFOAM.com                      |
+            |    \\\/     M anipulation  |                                                 |
+            \*---------------------------------------------------------------------------*/
+            #includeEtc "caseDicts/postProcessing/numerical/residuals.cfg"
+
+            fields (T);
+
+            // ************************************************************************* //
+            """
         )
