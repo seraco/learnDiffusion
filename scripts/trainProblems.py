@@ -4,7 +4,7 @@ from setTrainProblems import setTP
 from solveTrainProblems import solveTP
 from plotResidualsTrainProblems import plotResidualsTP
 
-N = 10
+N = 1
 
 setTP(N)
 solveTP(N)

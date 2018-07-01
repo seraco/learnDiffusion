@@ -14,7 +14,7 @@ from genSys import generateMainSolidChangeDict
 from genSys import generateMainSolidFvSchemes
 from genSys import generateMainSolidFvSolution
 from genSys import generateTopoSetDict
-from genSys import generateResiduals
+# from genSys import generateResiduals
 from genCons import generateRegionProperties
 from genCons import generateRadiationProperties
 from genCons import generateHeaterThermoProperties
@@ -57,7 +57,7 @@ def setTP(number):
             generateMainSolidFvSchemes(system_path + '/mainSolid/fvSchemes')
             generateMainSolidFvSolution(system_path + '/mainSolid/fvSolution')
             generateTopoSetDict(system_path + '/topoSetDict')
-            generateResiduals(system_path + '/residuals')
+            # generateResiduals(system_path + '/residuals')
 
         if not os.path.exists(properties_path):
             os.makedirs(properties_path + '/heater')

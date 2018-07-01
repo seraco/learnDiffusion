@@ -646,18 +646,23 @@ def generateTopoSetDict(file_path):
     while abs(aRanY - bRanY) < 1.1*deltaY:
         bRanY += random.uniform(minY, maxY)
 
-    if aRanX < bRanX:
-        x1 = aRanX
-        x2 = bRanX
-    else:
-        x1 = bRanX
-        x2 = aRanX
-    if aRanY < bRanY:
-        y1 = aRanY
-        y2 = bRanY
-    else:
-        y1 = bRanY
-        y2 = aRanY
+    # if aRanX < bRanX:
+    #     x1 = aRanX
+    #     x2 = bRanX
+    # else:
+    #     x1 = bRanX
+    #     x2 = aRanX
+    # if aRanY < bRanY:
+    #     y1 = aRanY
+    #     y2 = bRanY
+    # else:
+    #     y1 = bRanY
+    #     y2 = aRanY
+
+    x1 =  0.06
+    x2 = -0.0
+    y1 =  0.0
+    y2 =  0.0
 
     z1 = minZ
     z2 = maxZ
@@ -752,21 +757,21 @@ def generateTopoSetDict(file_path):
             """.format(**data)
         )
 
-def generateResiduals(file_path):
-    with open(file_path, 'w') as fd:
-        fd.write(
-            """
-            /*--------------------------------*- C++ -*----------------------------------*\\
-            | =========                 |                                                 |
-            | \\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-            |  \\\    /   O peration     | Version:  plus                                  |
-            |   \\\  /    A nd           | Web:      www.OpenFOAM.com                      |
-            |    \\\/     M anipulation  |                                                 |
-            \*---------------------------------------------------------------------------*/
-            #includeEtc "caseDicts/postProcessing/numerical/residuals.cfg"
-
-            fields (T);
-
-            // ************************************************************************* //
-            """
-        )
+# def generateResiduals(file_path):
+#     with open(file_path, 'w') as fd:
+#         fd.write(
+#             """
+#             /*--------------------------------*- C++ -*----------------------------------*\\
+#             | =========                 |                                                 |
+#             | \\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+#             |  \\\    /   O peration     | Version:  plus                                  |
+#             |   \\\  /    A nd           | Web:      www.OpenFOAM.com                      |
+#             |    \\\/     M anipulation  |                                                 |
+#             \*---------------------------------------------------------------------------*/
+#             #includeEtc "caseDicts/postProcessing/numerical/residuals.cfg"
+#
+#             fields (T);
+#
+#             // ************************************************************************* //
+#             """
+#         )

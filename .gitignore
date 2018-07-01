@@ -109,3 +109,7 @@ venv.bak/
 
 # Mac OS .DS_Store
 .DS_Store
+
+# C
+*.out
+*.o
