@@ -3,22 +3,17 @@
 #include <math.h>
 
 #include "diffusion.h"
-
-// #define KYEL "\x1B[33m"
-#define KGRN "\x1B[32m"
-#define KRED "\x1B[31m"
-#define KNRM "\x1B[0m"
-
-int test_cds_2();
-int test_compute_mesh();
-void run(char *file_name);
-int success(char *file_name);
-int failure(char *file_name);
+#include "test_diffusion.h"
 
 int main()
 {
     if (test_cds_2()
-        || test_compute_mesh())
+        || test_fds_1()
+        || test_bds_1()
+        || test_compute_mesh()
+        || test_set_diffusivities()
+        || test_init_temperatures()
+        || test_compute_step())
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
@@ -44,6 +39,54 @@ int test_cds_2()
     a = 3.0, b = 1.0;
     // printf("%f\n", cds_2(b, a, delta_x));
     if (fabs(cds_2(b, a, delta_x) + 0.5) >= 0.0001)
+        return failure(f_name);
+
+    // TODO: Study divide by zero error
+
+    return success(f_name);
+}
+
+int test_fds_1()
+{
+    char *f_name = "fds_1";
+    run(f_name);
+
+    double a, b, delta_x;
+
+    a = 1.0, b = 1.0, delta_x = 2.0;
+    if (fabs(fds_1(b, a, delta_x) - 0.0) >= 0.0001)
+        return failure(f_name);
+
+    a = 1.0, b = 3.0;
+    if (fabs(fds_1(b, a, delta_x) - 1.0) >= 0.0001)
+        return failure(f_name);
+
+    a = 3.0, b = 1.0;
+    if (fabs(fds_1(b, a, delta_x) + 1.0) >= 0.0001)
+        return failure(f_name);
+
+    // TODO: Study divide by zero error
+
+    return success(f_name);
+}
+
+int test_bds_1()
+{
+    char *f_name = "bds_1";
+    run(f_name);
+
+    double a, b, delta_x;
+
+    a = 1.0, b = 1.0, delta_x = 2.0;
+    if (fabs(fds_1(b, a, delta_x) - 0.0) >= 0.0001)
+        return failure(f_name);
+
+    a = 1.0, b = 3.0;
+    if (fabs(fds_1(b, a, delta_x) - 1.0) >= 0.0001)
+        return failure(f_name);
+
+    a = 3.0, b = 1.0;
+    if (fabs(fds_1(b, a, delta_x) + 1.0) >= 0.0001)
         return failure(f_name);
 
     // TODO: Study divide by zero error
@@ -112,6 +155,109 @@ int test_compute_mesh()
         || fabs(points[8].x - 1.0) >= 0.0001
         || fabs(points[8].y - 1.0) >= 0.0001)
         return failure(f_name);
+
+    return success(f_name);
+}
+
+int test_set_diffusivities()
+{
+    char *f_name = "set_diffusivities";
+    run(f_name);
+
+    int n_x = 3, n_y = 3;
+    int length = n_x * n_y;
+    struct Point points[length];
+    double diff = 1.0;
+
+    set_diffusivities(points, length, diff);
+
+    for (int k = 0; k < length; k++) {
+        if (fabs(points[k].diffusivity - 1.0) >= 0.0001)
+            return failure(f_name);
+    }
+
+    return success(f_name);
+}
+
+int test_init_temperatures()
+{
+    char *f_name = "init_temperatures";
+    run(f_name);
+
+    int n_x = 3, n_y = 3;
+    int length = n_x * n_y;
+    struct Point points[length];
+    double temp = 273.0;
+
+    init_temperatures(points, length, temp);
+
+    for (int k = 0; k < length; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+
+    return success(f_name);
+}
+
+int test_compute_step()
+{
+    char *f_name = "compute_step";
+    run(f_name);
+
+    int n_x = 5, n_y = 5;
+    double x_size = 1.0, y_size = 1.0;
+    int length = n_x * n_y;
+    struct Point points[length];
+    double diff = 1e-5, temp = 273.0;
+    double d_t = 0.1;
+
+    // No boundary conditions
+    set_diffusivities(points, length, diff);
+    init_temperatures(points, length, temp);
+
+    compute_step(points, n_x, n_y, x_size, y_size, d_t);
+    for (int k = 0; k < length; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+
+    // Boundary condition of 500K at the center
+    // TODO: Test for the general case, not only for n_x = 5, n_y = 5
+    for (int t = 0; t < 1000; t++) {
+        points[12].temperature = 500.0;
+        compute_step(points, n_x, n_y, x_size, y_size, d_t);
+    }
+    // for (int k = 0; k < length; k++) {
+    //     printf("Temperature[%d] = %f\n", k, points[k].temperature);
+    // }
+    for (int k = 0; k < 6; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 6; k < 9; k++) {
+        if (fabs(points[k].temperature - 273.0) <= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 9; k < 11; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 11; k < 14; k++) {
+        if (fabs(points[k].temperature - 273.0) <= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 14; k < 16; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 16; k < 19; k++) {
+        if (fabs(points[k].temperature - 273.0) <= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 19; k < length; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
 
     return success(f_name);
 }
