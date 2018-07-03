@@ -13,6 +13,7 @@ int test_compute_mesh();
 int test_set_diffusivities();
 int test_init_temperatures();
 int test_compute_step();
+int test_solve_diffusion();
 void run(char *file_name);
 int success(char *file_name);
 int failure(char *file_name);

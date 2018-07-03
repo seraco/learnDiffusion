@@ -5,13 +5,16 @@
 
 const int N_X = 256;
 const int N_Y = 256;
+const double X_SIZE = 1.0;
+const double Y_SIZE = 1.0;
 
 int main()
 {
-    printf("Nx = %d, Ny = %d\n", N_X, N_Y);
+    int length = N_X * N_Y;
+    struct Point points[length];
+    double d_t = 0.3, init_temp = 273.0;
 
-    double b = 3.0, a = 1.0, delta_x = 2.0;
-    printf("CDS2 = %f\n", cds_2(b, a, delta_x));
+    solve_diffusion(1, points, N_X, N_Y, X_SIZE, Y_SIZE, d_t, init_temp);
 
     return EXIT_SUCCESS;
 }

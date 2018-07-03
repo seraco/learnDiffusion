@@ -56,9 +56,15 @@ $(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.c
 debug: CFLAGS += -DDEBUG -g
 debug: $(EXE)
 
+.PHONY: python
+python:
+	python setup.py install_lib
+
 .PHONY: clean
 clean:
 	$(RM) $(OBJ)
 	$(RM) $(BIN)
 	$(RM) $(TEST_OBJ)
 	$(RM) $(TEST_BIN)
+	rm -rf ./build
+	$(RM) *.so

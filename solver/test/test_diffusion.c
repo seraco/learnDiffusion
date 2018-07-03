@@ -13,7 +13,8 @@ int main()
         || test_compute_mesh()
         || test_set_diffusivities()
         || test_init_temperatures()
-        || test_compute_step())
+        || test_compute_step()
+        || test_solve_diffusion())
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
@@ -223,13 +224,57 @@ int test_compute_step()
 
     // Boundary condition of 500K at the center
     // TODO: Test for the general case, not only for n_x = 5, n_y = 5
-    for (int t = 0; t < 1000; t++) {
+    for (int iter = 0; iter < 1000; iter++) {
         points[12].temperature = 500.0;
         compute_step(points, n_x, n_y, x_size, y_size, d_t);
     }
     // for (int k = 0; k < length; k++) {
     //     printf("Temperature[%d] = %f\n", k, points[k].temperature);
     // }
+    for (int k = 0; k < 6; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 6; k < 9; k++) {
+        if (fabs(points[k].temperature - 273.0) <= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 9; k < 11; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 11; k < 14; k++) {
+        if (fabs(points[k].temperature - 273.0) <= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 14; k < 16; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 16; k < 19; k++) {
+        if (fabs(points[k].temperature - 273.0) <= 0.0001)
+            return failure(f_name);
+    }
+    for (int k = 19; k < length; k++) {
+        if (fabs(points[k].temperature - 273.0) >= 0.0001)
+            return failure(f_name);
+    }
+
+    return success(f_name);
+}
+
+int test_solve_diffusion()
+{
+    char *f_name = "solve_diffusion";
+    run(f_name);
+
+    int n_x = 5, n_y = 5;
+    double x_size = 1.0, y_size = 1.0;
+    int length = n_x * n_y;
+    struct Point points[length];
+    double d_t = 0.1;
+
+    solve_diffusion(0, points, n_x, n_y, x_size, y_size, d_t, 273.0);
     for (int k = 0; k < 6; k++) {
         if (fabs(points[k].temperature - 273.0) >= 0.0001)
             return failure(f_name);

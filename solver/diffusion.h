@@ -16,7 +16,10 @@ void compute_mesh(struct Point points[], int n_x, int n_y,
                   double width, double height);
 void set_diffusivities(struct Point points[], int points_length, double diffus);
 void init_temperatures(struct Point points[], int points_length, double temp);
-void compute_step(struct Point points[], int n_x, int n_y,
-                  double width, double height, double timestep);
+double compute_step(struct Point points[], int n_x, int n_y,
+                    double width, double height, double timestep);
+int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
+                    double width, double height, double timestep,
+                    double initial_temp);
 
 #endif
