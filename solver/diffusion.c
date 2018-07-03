@@ -114,10 +114,11 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double initial_temp)
 {
     double res = 10.0;
-    int iter = 0;
+    int iter = 0, length = n_x * n_y;
 
-    set_diffusivities(points, n_x * n_y, 1e-5);
-    init_temperatures(points, n_x * n_y, initial_temp);
+    compute_mesh(points, n_x, n_y, width, height);
+    set_diffusivities(points, length, 1e-5);
+    init_temperatures(points, length, initial_temp);
 
     while (res > 0.0001) {
         iter++;
@@ -129,7 +130,42 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     if (print)
         printf("Residual = %f\n", res);
 
+    write_vtk(points, n_x, n_y);
+
     return iter;
+}
+
+void write_vtk(struct Point points[], int n_x, int n_y)
+{
+    FILE *f_ptr;
+    int length = n_x * n_y;
+
+    f_ptr = fopen("solution.vtk", "w");
+    fprintf(f_ptr, "# vtk DataFile Version 2.0\n");
+    fprintf(f_ptr, "Diffusion solution\n");
+    fprintf(f_ptr, "ASCII\n");
+    fprintf(f_ptr, "DATASET STRUCTURED_GRID\n");
+    fprintf(f_ptr, "DIMENSIONS %d %d 1\n", n_x, n_y);
+    fprintf(f_ptr, "POINTS %d double\n", length);
+
+    for (int k = 0; k < length; k++) {
+        double x, y;
+        x = points[k].x;
+        y = points[k].y;
+        fprintf(f_ptr, "%f %f 0.0\n", x, y);
+    }
+
+    fprintf(f_ptr, "POINT_DATA %d\n", length);
+    fprintf(f_ptr, "FIELD FieldData 1\n");
+    fprintf(f_ptr, "Temperature 1 %d double\n", length);
+
+    for (int k = 0; k < length; k++) {
+        double temp;
+        temp = points[k].temperature;
+        fprintf(f_ptr, "%f\n", temp);
+    }
+
+    fclose(f_ptr);
 }
 
 #endif

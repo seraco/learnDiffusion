@@ -21,5 +21,6 @@ double compute_step(struct Point points[], int n_x, int n_y,
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double width, double height, double timestep,
                     double initial_temp);
+void write_vtk(struct Point points[], int n_x, int n_y);
 
 #endif
