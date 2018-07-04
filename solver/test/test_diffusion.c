@@ -166,16 +166,36 @@ int test_set_diffusivities()
     run(f_name);
 
     int n_x = 3, n_y = 3;
+    double x_size = 1.0, y_size = 1.0;
     int length = n_x * n_y;
     struct Point points[length];
-    double diff = 1.0;
+    double diff_1 = 1.0, diff_2 = 2.0;
 
-    set_diffusivities(points, length, diff);
+    compute_mesh(points, n_x, n_y, x_size, y_size);
 
+    set_diffusivities(points, length, diff_1, diff_1, 0.0, 0.0, 0.0, 0.0);
     for (int k = 0; k < length; k++) {
         if (fabs(points[k].diffusivity - 1.0) >= 0.0001)
             return failure(f_name);
     }
+
+    set_diffusivities(points, length, diff_1, diff_2, 0.0, x_size, 0.0, y_size);
+    for (int k = 0; k < length; k++) {
+        if (fabs(points[k].diffusivity - 2.0) >= 0.0001)
+            return failure(f_name);
+    }
+
+    set_diffusivities(points, length, diff_1, diff_2, 0.25, 0.75, 0.25, 0.75);
+    if (fabs(points[0].diffusivity - 1.0) >= 0.0001
+        || fabs(points[1].diffusivity - 2.0) >= 0.0001
+        || fabs(points[2].diffusivity - 1.0) >= 0.0001
+        || fabs(points[3].diffusivity - 1.0) >= 0.0001
+        || fabs(points[4].diffusivity - 2.0) >= 0.0001
+        || fabs(points[5].diffusivity - 1.0) >= 0.0001
+        || fabs(points[6].diffusivity - 1.0) >= 0.0001
+        || fabs(points[7].diffusivity - 2.0) >= 0.0001
+        || fabs(points[8].diffusivity - 1.0) >= 0.0001)
+        return failure(f_name);
 
     return success(f_name);
 }
@@ -212,11 +232,13 @@ int test_compute_step()
     double diff = 1e-5, temp = 273.0;
     double d_t = 0.1;
 
+    compute_mesh(points, n_x, n_y, x_size, y_size);
+
     // No boundary conditions
-    set_diffusivities(points, length, diff);
+    set_diffusivities(points, length, diff, diff, 0.0, x_size, 0.0, y_size);
     init_temperatures(points, length, temp);
 
-    compute_step(points, n_x, n_y, x_size, y_size, d_t);
+    compute_step(points, n_x, n_y, x_size, y_size, d_t, 0.5, 0.5, 273.0);
     for (int k = 0; k < length; k++) {
         if (fabs(points[k].temperature - 273.0) >= 0.0001)
             return failure(f_name);
@@ -225,8 +247,7 @@ int test_compute_step()
     // Boundary condition of 500K at the center
     // TODO: Test for the general case, not only for n_x = 5, n_y = 5
     for (int iter = 0; iter < 1000; iter++) {
-        points[12].temperature = 500.0;
-        compute_step(points, n_x, n_y, x_size, y_size, d_t);
+        compute_step(points, n_x, n_y, x_size, y_size, d_t, 0.5, 0.5, 500.0);
     }
     // for (int k = 0; k < length; k++) {
     //     printf("Temperature[%d] = %f\n", k, points[k].temperature);
@@ -274,7 +295,8 @@ int test_solve_diffusion()
     struct Point points[length];
     double d_t = 0.1;
 
-    solve_diffusion(0, points, n_x, n_y, x_size, y_size, d_t, 273.0);
+    solve_diffusion(0, points, n_x, n_y, x_size, y_size, d_t,
+                    273.0, 0.5, 0.5, 500.0);
     for (int k = 0; k < 6; k++) {
         if (fabs(points[k].temperature - 273.0) >= 0.0001)
             return failure(f_name);

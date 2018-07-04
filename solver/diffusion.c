@@ -39,10 +39,15 @@ void compute_mesh(struct Point points[], int n_x, int n_y,
     }
 }
 
-void set_diffusivities(struct Point points[], int points_length, double diffus)
+void set_diffusivities(struct Point points[], int points_length,
+                       double diffus_1, double diffus_2,
+                       double x_1, double x_2, double y_1, double y_2)
 {
     for (int k = 0; k < points_length; k++) {
-        points[k].diffusivity = diffus;
+        if (points[k].x < x_1 || points[k].x > x_2)
+            points[k].diffusivity = diffus_1;
+        else
+            points[k].diffusivity = diffus_2;
     }
 }
 
@@ -54,7 +59,8 @@ void init_temperatures(struct Point points[], int points_length, double temp)
 }
 
 double compute_step(struct Point points[], int n_x, int n_y,
-                    double width, double height, double timestep)
+                    double width, double height, double timestep,
+                    double x_bc, double y_bc, double temp_bc)
 {
     int center, east, west, north, south;
     double d_x = width / (n_x - 1);
@@ -63,6 +69,16 @@ double compute_step(struct Point points[], int n_x, int n_y,
     double x_term_east, x_term_west, x_term;
     double y_term_south, y_term_north, y_term;
     double max_res = 0.0;
+
+    for (int j = 1; j < n_x - 1; j++) {
+        for (int i = 1; i < n_y - 1; i++) {
+            center = i + j * n_x;
+            if (fabs(points[center].x - x_bc) < 1.1 * d_x
+                && fabs(points[center].y - y_bc) < 1.1 * d_y)
+                points[center].temperature = temp_bc;
+        }
+    }
+
     for (int j = 1; j < n_x - 1; j++) {
         for (int i = 1; i < n_y - 1; i++) {
             center = i + j * n_x;
@@ -111,19 +127,20 @@ double compute_step(struct Point points[], int n_x, int n_y,
 
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double width, double height, double timestep,
-                    double initial_temp)
+                    double initial_temp,
+                    double x_bc, double y_bc, double temp_bc)
 {
     double res = 10.0;
     int iter = 0, length = n_x * n_y;
 
     compute_mesh(points, n_x, n_y, width, height);
-    set_diffusivities(points, length, 1e-5);
+    set_diffusivities(points, length, 1e-5, 2e-5, 0.25, 0.75, 0.25, 0.75);
     init_temperatures(points, length, initial_temp);
 
     while (res > 0.0001) {
         iter++;
-        points[12].temperature = 500.0;
-        res = compute_step(points, n_x, n_y, width, height, timestep);
+        res = compute_step(points, n_x, n_y, width, height, timestep,
+                           x_bc, y_bc, temp_bc);
         if (print && (iter % 1000 == 0))
             printf("Residual = %f\n", res);
     }

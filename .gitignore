@@ -113,3 +113,6 @@ venv.bak/
 # C
 *.out
 *.o
+
+# VTK solution files
+*.vtk
