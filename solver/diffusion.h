@@ -20,7 +20,7 @@ void set_diffusivities(struct Point points[], int points_length,
 void init_temperatures(struct Point points[], int points_length, double temp);
 double compute_step(struct Point points[], int n_x, int n_y,
                     double width, double height, double timestep,
-                    double x_bc, double y_bc, double temp_bc);
+                    int indexes_bc[], int length_idx_bc, double temp_bc);
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double width, double height, double timestep,
                     double initial_temp,

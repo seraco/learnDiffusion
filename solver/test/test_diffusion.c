@@ -231,6 +231,7 @@ int test_compute_step()
     struct Point points[length];
     double diff = 1e-5, temp = 273.0;
     double d_t = 0.1;
+    int bc_indx[] = {12};
 
     compute_mesh(points, n_x, n_y, x_size, y_size);
 
@@ -238,7 +239,7 @@ int test_compute_step()
     set_diffusivities(points, length, diff, diff, 0.0, x_size, 0.0, y_size);
     init_temperatures(points, length, temp);
 
-    compute_step(points, n_x, n_y, x_size, y_size, d_t, 0.5, 0.5, 273.0);
+    compute_step(points, n_x, n_y, x_size, y_size, d_t, bc_indx, 1, 273.0);
     for (int k = 0; k < length; k++) {
         if (fabs(points[k].temperature - 273.0) >= 0.0001)
             return failure(f_name);
@@ -247,7 +248,7 @@ int test_compute_step()
     // Boundary condition of 500K at the center
     // TODO: Test for the general case, not only for n_x = 5, n_y = 5
     for (int iter = 0; iter < 1000; iter++) {
-        compute_step(points, n_x, n_y, x_size, y_size, d_t, 0.5, 0.5, 500.0);
+        compute_step(points, n_x, n_y, x_size, y_size, d_t, bc_indx, 1, 500.0);
     }
     // for (int k = 0; k < length; k++) {
     //     printf("Temperature[%d] = %f\n", k, points[k].temperature);

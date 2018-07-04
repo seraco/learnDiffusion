@@ -60,7 +60,7 @@ void init_temperatures(struct Point points[], int points_length, double temp)
 
 double compute_step(struct Point points[], int n_x, int n_y,
                     double width, double height, double timestep,
-                    double x_bc, double y_bc, double temp_bc)
+                    int indexes_bc[], int length_idx_bc, double temp_bc)
 {
     int center, east, west, north, south;
     double d_x = width / (n_x - 1);
@@ -70,13 +70,8 @@ double compute_step(struct Point points[], int n_x, int n_y,
     double y_term_south, y_term_north, y_term;
     double max_res = 0.0;
 
-    for (int j = 1; j < n_x - 1; j++) {
-        for (int i = 1; i < n_y - 1; i++) {
-            center = i + j * n_x;
-            if (fabs(points[center].x - x_bc) < 1.1 * d_x
-                && fabs(points[center].y - y_bc) < 1.1 * d_y)
-                points[center].temperature = temp_bc;
-        }
+    for (int k = 0; k < length_idx_bc; k++) {
+        points[indexes_bc[k]].temperature = temp_bc;
     }
 
     for (int j = 1; j < n_x - 1; j++) {
@@ -134,15 +129,30 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
 {
     double res = 10.0;
     int iter = 0, length = n_x * n_y;
+    int bc_pseudo_length = 20, bc_i = 0;
+    int bc_indx[bc_pseudo_length], center;
+    double d_x = width / (n_x - 1);
+    double d_y = height / (n_y - 1);
 
     compute_mesh(points, n_x, n_y, width, height);
     set_diffusivities(points, length, diff_1, diff_2, x_1, x_2, y_1, y_2);
     init_temperatures(points, length, initial_temp);
 
+    for (int j = 1; j < n_x - 1; j++) {
+        for (int i = 1; i < n_y - 1; i++) {
+            center = i + j * n_x;
+            if (fabs(points[center].x - x_bc) < 1.1 * d_x
+                && fabs(points[center].y - y_bc) < 1.1 * d_y) {
+                bc_indx[bc_i] = center;
+                bc_i++;
+            }
+        }
+    }
+
     while (res > 0.0001) {
         iter++;
         res = compute_step(points, n_x, n_y, width, height, timestep,
-                           x_bc, y_bc, temp_bc);
+                           bc_indx, bc_i, temp_bc);
         if (print && (iter % 1000 == 0))
             printf("Residual = %f\n", res);
     }
