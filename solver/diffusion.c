@@ -128,13 +128,15 @@ double compute_step(struct Point points[], int n_x, int n_y,
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double width, double height, double timestep,
                     double initial_temp,
-                    double x_bc, double y_bc, double temp_bc)
+                    double x_bc, double y_bc, double temp_bc,
+                    double diff_1, double diff_2,
+                    double x_1, double x_2, double y_1, double y_2)
 {
     double res = 10.0;
     int iter = 0, length = n_x * n_y;
 
     compute_mesh(points, n_x, n_y, width, height);
-    set_diffusivities(points, length, 1e-5, 2e-5, 0.25, 0.75, 0.25, 0.75);
+    set_diffusivities(points, length, diff_1, diff_2, x_1, x_2, y_1, y_2);
     init_temperatures(points, length, initial_temp);
 
     while (res > 0.0001) {

@@ -293,10 +293,11 @@ int test_solve_diffusion()
     double x_size = 1.0, y_size = 1.0;
     int length = n_x * n_y;
     struct Point points[length];
-    double d_t = 0.1;
+    double d_t = 0.1, diff = 1e-5;
 
     solve_diffusion(0, points, n_x, n_y, x_size, y_size, d_t,
-                    273.0, 0.5, 0.5, 500.0);
+                    273.0, 0.5, 0.5, 500.0,
+                    diff, diff, 0.0, x_size, 0.0, y_size);
     for (int k = 0; k < 6; k++) {
         if (fabs(points[k].temperature - 273.0) >= 0.0001)
             return failure(f_name);
