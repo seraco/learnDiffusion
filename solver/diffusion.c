@@ -70,10 +70,6 @@ double compute_step(struct Point points[], int n_x, int n_y,
     double x_y_term;
     double max_res = 0.0;
 
-    for (int k = 0; k < length_idx_bc; k++) {
-        points[indexes_bc[k]].temperature = temp_bc;
-    }
-
     for (int j = 1; j < n_x - 1; j++) {
         for (int i = 1; i < n_y - 1; i++) {
             center = i + j * n_x;
@@ -110,6 +106,20 @@ double compute_step(struct Point points[], int n_x, int n_y,
         }
     }
 
+    for (int k = 0; k < length_idx_bc; k++) {
+        points[indexes_bc[k]].temperature = temp_bc;
+    }
+
+    for (int j = 1; j < n_x - 1; j++) {
+        for (int i = 1; i < n_y - 1; i++) {
+            center = i + j * n_x;
+            north = i + (j + 1) * n_x;
+
+            if (points[center].temperature == 500.0)
+                printf("Temp %f\n", points[north + 1].temperature);
+        }
+    }
+
     return max_res;
 }
 
@@ -127,6 +137,10 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     double d_x = width / (n_x - 1);
     double d_y = height / (n_y - 1);
 
+    // double max_diff = diff_2 > diff_1 ? diff_2 : diff_1;
+    // double cfl = max_diff * timestep / d_x;
+    // printf("CFL = %f\n", cfl);
+
     compute_mesh(points, n_x, n_y, width, height);
     set_diffusivities(points, length, diff_1, diff_2, x_1, x_2, y_1, y_2);
     init_temperatures(points, length, initial_temp);
@@ -142,7 +156,11 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
         }
     }
 
-    while (res > 0.0001) {
+    for (int k = 0; k < bc_i; k++) {
+        points[bc_indx[k]].temperature = temp_bc;
+    }
+
+    while (res > 0.0013) {
         iter++;
         res = compute_step(points, n_x, n_y, width, height, timestep,
                            bc_indx, bc_i, temp_bc);
