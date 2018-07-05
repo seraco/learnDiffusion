@@ -65,9 +65,9 @@ double compute_step(struct Point points[], int n_x, int n_y,
     int center, east, west, north, south;
     double d_x = width / (n_x - 1);
     double d_y = height / (n_y - 1);
-    double rhs;
-    double x_term_east, x_term_west, x_term;
-    double y_term_south, y_term_north, y_term;
+    double x_term_east, x_term_west;
+    double y_term_south, y_term_north;
+    double x_y_term;
     double max_res = 0.0;
 
     for (int k = 0; k < length_idx_bc; k++) {
@@ -96,18 +96,17 @@ double compute_step(struct Point points[], int n_x, int n_y,
                                  points[south].temperature,
                                  d_y);
 
-            x_term = cds_2(x_term_east * points[east].diffusivity,
-                           x_term_west * points[west].diffusivity,
-                           d_x);
-            y_term = cds_2(y_term_north * points[north].diffusivity,
-                           y_term_south * points[south].diffusivity,
-                           d_y);
-                           
-            rhs = x_term + y_term;
-            if (fabs(rhs) > max_res)
-                max_res = rhs;
+            x_y_term = cds_2(x_term_east * points[east].diffusivity,
+                             x_term_west * points[west].diffusivity,
+                             d_x);
+            x_y_term += cds_2(y_term_north * points[north].diffusivity,
+                              y_term_south * points[south].diffusivity,
+                              d_y);
 
-            points[center].temperature += timestep * rhs;
+            if (fabs(x_y_term) > max_res)
+                max_res = x_y_term;
+
+            points[center].temperature += timestep * x_y_term;
         }
     }
 
