@@ -50,11 +50,11 @@ def solve():
     x_m = (x_1 + x_2) / 2.0
     y_m = (y_1 + y_2) / 2.0
 
-    print "X1", x_1
-    print "XM", x_m
-    print "X2", x_2
-    print "Y1", y_1
-    print "YM", y_m
-    print "Y2", y_2
+    # print "X1", x_1
+    # print "XM", x_m
+    # print "X2", x_2
+    # print "Y1", y_1
+    # print "YM", y_m
+    # print "Y2", y_2
 
     diffusion.solve(init_temp, x_m, y_m, temp_bc, x_1, x_2, y_1, y_2)

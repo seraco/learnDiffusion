@@ -3,8 +3,8 @@
 
 #include "diffusion.h"
 
-const int N_X = 257;
-const int N_Y = 257;
+const int N_X = 256;
+const int N_Y = 256;
 const double X_SIZE = 1.0;
 const double Y_SIZE = 1.0;
 
