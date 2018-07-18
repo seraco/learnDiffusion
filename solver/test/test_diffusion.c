@@ -7,10 +7,7 @@
 
 int main()
 {
-    if (test_cds_2()
-        || test_fds_1()
-        || test_bds_1()
-        || test_compute_mesh()
+    if (test_compute_mesh()
         || test_set_diffusivities()
         || test_init_temperatures()
         || test_compute_step()
@@ -18,81 +15,6 @@ int main()
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
-}
-
-int test_cds_2()
-{
-    char *f_name = "cds_2";
-    run(f_name);
-
-    double a, b, delta_x;
-
-    a = 1.0, b = 1.0, delta_x = 2.0;
-    // printf("%f\n", cds_2(b, a, delta_x));
-    if (fabs(cds_2(b, a, delta_x) - 0.0) >= 0.0001)
-        return failure(f_name);
-
-    a = 1.0, b = 3.0;
-    // printf("%f\n", cds_2(b, a, delta_x));
-    if (fabs(cds_2(b, a, delta_x) - 0.5) >= 0.0001)
-        return failure(f_name);
-
-    a = 3.0, b = 1.0;
-    // printf("%f\n", cds_2(b, a, delta_x));
-    if (fabs(cds_2(b, a, delta_x) + 0.5) >= 0.0001)
-        return failure(f_name);
-
-    // TODO: Study divide by zero error
-
-    return success(f_name);
-}
-
-int test_fds_1()
-{
-    char *f_name = "fds_1";
-    run(f_name);
-
-    double a, b, delta_x;
-
-    a = 1.0, b = 1.0, delta_x = 2.0;
-    if (fabs(fds_1(b, a, delta_x) - 0.0) >= 0.0001)
-        return failure(f_name);
-
-    a = 1.0, b = 3.0;
-    if (fabs(fds_1(b, a, delta_x) - 1.0) >= 0.0001)
-        return failure(f_name);
-
-    a = 3.0, b = 1.0;
-    if (fabs(fds_1(b, a, delta_x) + 1.0) >= 0.0001)
-        return failure(f_name);
-
-    // TODO: Study divide by zero error
-
-    return success(f_name);
-}
-
-int test_bds_1()
-{
-    char *f_name = "bds_1";
-    run(f_name);
-
-    double a, b, delta_x;
-
-    a = 1.0, b = 1.0, delta_x = 2.0;
-    if (fabs(fds_1(b, a, delta_x) - 0.0) >= 0.0001)
-        return failure(f_name);
-
-    a = 1.0, b = 3.0;
-    if (fabs(fds_1(b, a, delta_x) - 1.0) >= 0.0001)
-        return failure(f_name);
-
-    a = 3.0, b = 1.0;
-    if (fabs(fds_1(b, a, delta_x) + 1.0) >= 0.0001)
-        return failure(f_name);
-
-    // TODO: Study divide by zero error
-
-    return success(f_name);
 }
 
 int test_compute_mesh()
@@ -105,37 +27,6 @@ int test_compute_mesh()
     struct Point points[n_x * n_y];
 
     compute_mesh(points, n_x, n_y, x_size, y_size);
-
-    if (points[0].global_index != 0
-        || points[1].global_index != 1
-        || points[2].global_index != 2
-        || points[3].global_index != 3
-        || points[4].global_index != 4
-        || points[5].global_index != 5
-        || points[6].global_index != 6
-        || points[7].global_index != 7
-        || points[8].global_index != 8)
-        return failure(f_name);
-
-    if (points[0].x_index != 0
-        || points[0].y_index != 0
-        || points[1].x_index != 1
-        || points[1].y_index != 0
-        || points[2].x_index != 2
-        || points[2].y_index != 0
-        || points[3].x_index != 0
-        || points[3].y_index != 1
-        || points[4].x_index != 1
-        || points[4].y_index != 1
-        || points[5].x_index != 2
-        || points[5].y_index != 1
-        || points[6].x_index != 0
-        || points[6].y_index != 2
-        || points[7].x_index != 1
-        || points[7].y_index != 2
-        || points[8].x_index != 2
-        || points[8].y_index != 2)
-        return failure(f_name);
 
     if (fabs(points[0].x - 0.0) >= 0.0001
         || fabs(points[0].y - 0.0) >= 0.0001
