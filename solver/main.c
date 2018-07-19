@@ -15,7 +15,7 @@ int main()
     double diff_1 = 1.5e-5, diff_2 = 3e-5;
 
     solve_diffusion(1, points, N_X, N_Y, total_time,
-                    init_temp, 128, 128, source,
+                    init_temp, 30, 30, source,
                     diff_1, diff_2,
                     64, 192, 64, 192);
 

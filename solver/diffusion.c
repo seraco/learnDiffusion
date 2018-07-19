@@ -54,8 +54,6 @@ double compute_step(struct Point points[], int n_x, int n_y,
     double x_y_term;
     double x_term, y_term;
     double max_res = 0.0;
-    // double avg_res = 0.0;
-    // int count = 0;
     double rhs[n_x * n_y];
 
     for (int j = 1; j < n_x - 1; j++) {
@@ -82,9 +80,6 @@ double compute_step(struct Point points[], int n_x, int n_y,
 
             if (fabs(x_y_term) > max_res)
                 max_res = fabs(x_y_term);
-            // avg_res += fabs(x_y_term);
-            // avg_res += x_y_term * x_y_term;
-            // count++;
 
 
             // points[center].temperature += x_y_term;
@@ -101,7 +96,6 @@ double compute_step(struct Point points[], int n_x, int n_y,
         }
     }
 
-    // return sqrt(avg_res / count);
     return max_res;
 }
 
@@ -114,15 +108,20 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     double res = 10.0;
     int iter = 0, length = n_x * n_y;
     double d_x, d_y;
-    double delta_space, timestep, side_size;
+    double delta_space, timestep, side_size, max_diff;
 
-    side_size = sqrt(2 * diff_2 * total_time);
+    max_diff = diff_1 > diff_2 ? diff_1 : diff_2;
+    side_size = sqrt(2 * max_diff * total_time);
+    side_size /= 2;
+
+    if (print)
+        printf("Side size = %.10e\n", side_size);
 
     d_x = side_size / (n_x - 1);
     d_y = side_size / (n_y - 1);
 
     delta_space = d_x < d_y ? d_x : d_y;
-    timestep = 0.25 * delta_space * delta_space / diff_2;
+    timestep = 0.25 * delta_space * delta_space / max_diff;
     timestep *= 0.98;
 
     if (print)
