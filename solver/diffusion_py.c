@@ -24,7 +24,8 @@ void initdiffusion()
 
 static PyObject *solver(PyObject *self, PyObject *args)
 {
-    double init_temp, i_bc, j_bc, source_val, i_1, i_2, j_1, j_2;
+    double init_temp, source_val;
+    int i_bc, j_bc, i_1, i_2, j_1, j_2;
 
     if (!PyArg_ParseTuple(args, "diidiiii", &init_temp, &i_bc, &j_bc, &source_val,
                           &i_1, &i_2, &j_1, &j_2))
