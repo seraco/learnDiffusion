@@ -34,7 +34,7 @@ all: compile
 compile: $(EXE)
 
 $(EXE): $(OBJ_WITHOUT_PY)
-	$(CC) $^ -o $(BIN_DIR)/$@.out $(LIB)
+	$(CC) $^ -o $(BIN_DIR)/$@.out $(LIB) -lm
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
@@ -42,7 +42,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 test: $(TEST_EXE)
 
 $(TEST_EXE): $(TEST_OBJ) $(OBJ_WITHOUT_MAIN_PY)
-	$(CC) $^ -o $(TEST_BIN_DIR)/$@.out $(TEST_LIB) $(LIB)
+	$(CC) $^ -o $(TEST_BIN_DIR)/$@.out $(TEST_LIB) $(LIB) -lm
 
 $(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.c
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) $(INC) $(INC_TEST) -c $< -o $@
