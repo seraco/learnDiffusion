@@ -6,10 +6,7 @@
 
 const int N_X = 256;
 const int N_Y = 256;
-const double X_SIZE = 1.0;
-const double Y_SIZE = 1.0;
-const double D_T = 0.3;
-// const double INIT_TEMP = 273.0;
+const double TOTAL_TIME = 1.0;
 const double DIFF_1 = 1e-5;
 const double DIFF_2 = 2e-5;
 
@@ -27,19 +24,19 @@ void initdiffusion()
 
 static PyObject *solver(PyObject *self, PyObject *args)
 {
-    double init_temp, x_bc, y_bc, temp_bc, x_1, x_2, y_1, y_2;
+    double init_temp, i_bc, j_bc, source_val, i_1, i_2, j_1, j_2;
 
-    if (!PyArg_ParseTuple(args, "dddddddd", &init_temp, &x_bc, &y_bc, &temp_bc,
-                          &x_1, &x_2, &y_1, &y_2))
+    if (!PyArg_ParseTuple(args, "diidiiii", &init_temp, &i_bc, &j_bc, &source_val,
+                          &i_1, &i_2, &j_1, &j_2))
         return NULL;
 
     int length = N_X * N_Y;
     struct Point points[length];
     int iter;
 
-    iter = solve_diffusion(0, points, N_X, N_Y, X_SIZE, Y_SIZE, D_T, init_temp,
-                           x_bc, y_bc, temp_bc, DIFF_1, DIFF_2,
-                           x_1, x_2, y_1, y_2);
+    iter = solve_diffusion(0, points, N_X, N_Y, TOTAL_TIME, init_temp,
+                           i_bc, j_bc, source_val, DIFF_1, DIFF_2,
+                           i_1, i_2, j_1, j_2);
 
     return Py_BuildValue("I", iter);
 }

@@ -19,15 +19,21 @@ void compute_mesh(struct Point points[], int n_x, int n_y,
     }
 }
 
-void set_diffusivities(struct Point points[], int points_length,
+void set_diffusivities(struct Point points[], int n_x, int n_y,
                        double diffus_1, double diffus_2,
-                       double x_1, double x_2, double y_1, double y_2)
+                       int i_1, int i_2, int j_1, int j_2)
 {
-    for (int k = 0; k < points_length; k++) {
-        if (points[k].x < x_1 || points[k].x > x_2)
-            points[k].diffusivity = diffus_1;
-        else
-            points[k].diffusivity = diffus_2;
+    int center;
+
+    for (int j = 0; j < n_x; j++) {
+        for (int i = 0; i < n_y; i++) {
+            center = i + j * n_x;
+
+            if (i < i_1 || i > i_2 || j < j_1 || j > j_2)
+                points[center].diffusivity = diffus_1;
+            else
+                points[center].diffusivity = diffus_2;
+        }
     }
 }
 
@@ -42,7 +48,6 @@ void init_temperatures(struct Point points[], int points_length, double temp)
 
 double compute_step(struct Point points[], int n_x, int n_y,
                     double width, double height, double timestep,
-                    int indexes_bc[], int length_idx_bc, double temp_bc,
                     double delta_x, double delta_y)
 {
     int center, east, west, north, south;
@@ -96,64 +101,56 @@ double compute_step(struct Point points[], int n_x, int n_y,
         }
     }
 
-    // for (int k = 0; k < length_idx_bc; k++) {
-    //     points[indexes_bc[k]].temperature = temp_bc;
-    // }
-
     // return sqrt(avg_res / count);
     return max_res;
 }
 
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
-                    double width, double height, double timestep,
-                    double initial_temp,
-                    double x_bc, double y_bc, double temp_bc,
+                    double total_time, double initial_temp,
+                    int i_bc, int j_bc, double source_val,
                     double diff_1, double diff_2,
-                    double x_1, double x_2, double y_1, double y_2)
+                    int i_1, int i_2, int j_1, int j_2)
 {
     double res = 10.0;
     int iter = 0, length = n_x * n_y;
-    int bc_pseudo_length = 20, bc_i = 0;
-    int bc_indx[bc_pseudo_length], center;
-    double d_x = width / (n_x - 1);
-    double d_y = height / (n_y - 1);
+    double d_x, d_y;
+    double delta_space, timestep, side_size;
 
-    compute_mesh(points, n_x, n_y, width, height, d_x, d_y);
-    set_diffusivities(points, length, diff_1, diff_2, x_1, x_2, y_1, y_2);
+    side_size = sqrt(2 * diff_2 * total_time);
+
+    d_x = side_size / (n_x - 1);
+    d_y = side_size / (n_y - 1);
+
+    delta_space = d_x < d_y ? d_x : d_y;
+    timestep = 0.25 * delta_space * delta_space / diff_2;
+    timestep *= 0.98;
+
+    if (print)
+        printf("Delta time = %.10e\n", timestep);
+
+    compute_mesh(points, n_x, n_y, side_size, side_size, d_x, d_y);
+    set_diffusivities(points, n_x, n_y, diff_1, diff_2, i_1, i_2, j_1, j_2);
     init_temperatures(points, length, initial_temp);
 
-    for (int j = 1; j < n_x - 1; j++) {
-        for (int i = 1; i < n_y - 1; i++) {
-            center = i + j * n_x;
-            if (fabs(points[center].x - x_bc) < 1.1 * d_x
-                && fabs(points[center].y - y_bc) < 1.1 * d_y) {
-                bc_indx[bc_i] = center;
-                bc_i++;
-            }
-        }
-    }
+    points[i_bc + j_bc * n_x].source = source_val;
 
-    for (int k = 0; k < bc_i; k++) {
-        points[bc_indx[k]].source = 10000.0;
-        // points[bc_indx[k]].temperature = temp_bc;
-    }
-
-    while (res > 1e-9) {
+    while (iter < (total_time / timestep)) {
         iter++;
-        res = compute_step(points, n_x, n_y, width, height, timestep,
-                           bc_indx, bc_i, temp_bc, d_x, d_y);
+        res = compute_step(points, n_x, n_y, side_size, side_size,
+                           timestep, d_x, d_y);
 
         if (print && (iter % 1000 == 0))
-                printf("Residual = %.10e, Number of iterations = %d\n", res, iter);
+                printf("Residual = %.10e, Number of iterations = %d\n",
+                        res, iter);
 
-        if (iter % 10000 == 0) {
-            write_vtk(points, n_x, n_y, iter / 10000);
-            write_res_vtk(points, n_x, n_y, iter / 10000);
-        }
+        // if (iter % 10000 == 0) {
+        //     write_vtk(points, n_x, n_y, iter / 10000);
+        //     write_res_vtk(points, n_x, n_y, iter / 10000);
+        // }
     }
 
     if (print)
-        printf("Residual = %f\n", res);
+        printf("Residual = %.10e, Number of iterations = %d\n", res, iter);
 
     write_vtk(points, n_x, n_y, 0);
     write_res_vtk(points, n_x, n_y, 0);
@@ -167,7 +164,7 @@ void write_vtk(struct Point points[], int n_x, int n_y, int iter_number)
     int length = n_x * n_y;
     char buffer[256];
 
-    sprintf(buffer, "plot/solution%d.vtk", iter_number);
+    sprintf(buffer, "solution%d.vtk", iter_number);
 
     f_ptr = fopen(buffer, "w");
     fprintf(f_ptr, "# vtk DataFile Version 2.0\n");
@@ -203,7 +200,7 @@ void write_res_vtk(struct Point points[], int n_x, int n_y, int iter_number)
     int length = n_x * n_y;
     char buffer[256];
 
-    sprintf(buffer, "plot/residual%d.vtk", iter_number);
+    sprintf(buffer, "residual%d.vtk", iter_number);
 
     f_ptr = fopen(buffer, "w");
     fprintf(f_ptr, "# vtk DataFile Version 2.0\n");
