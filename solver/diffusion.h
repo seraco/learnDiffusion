@@ -9,14 +9,14 @@ struct Point {
     double source;
 };
 
+void read_png_file(char *filename, int *n_x_ptr, int *n_y_ptr);
 void compute_mesh(struct Point points[], int n_x, int n_y,
-                  double width, double height, double delta_x, double delta_y);
+                  double delta_x, double delta_y);
 void set_diffusivities(struct Point points[], int n_x, int n_y,
                        double diffus_1, double diffus_2,
                        int i_1, int i_2, int j_1, int j_2);
 void init_temperatures(struct Point points[], int points_length, double temp);
-double compute_step(struct Point points[], int n_x, int n_y,
-                    double width, double height, double timestep,
+double compute_step(struct Point points[], int n_x, int n_y, double timestep,
                     double delta_x, double delta_y);
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double total_time, double initial_temp,

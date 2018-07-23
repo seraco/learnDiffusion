@@ -18,7 +18,7 @@ OBJ_WITHOUT_MAIN_PY = $(filter-out $(OBJ_DIR)/diffusion_py.o, $(OBJ_WITHOUT_MAIN
 TEST_OBJ = $(patsubst $(TEST_SRC_DIR)/%.c,$(TEST_OBJ_DIR)/%.o,$(TEST_SRC))
 BIN = $(wildcard $(BIN_DIR)/*.out)
 TEST_BIN = $(wildcard $(TEST_BIN_DIR)/*.out)
-LIB =
+LIB = -lm -lz -lpng
 TEST_LIB = $(wildcard $(TEST_LIB_DIR)/*.a)
 
 CC = gcc
@@ -34,7 +34,7 @@ all: compile
 compile: $(EXE)
 
 $(EXE): $(OBJ_WITHOUT_PY)
-	$(CC) $^ -o $(BIN_DIR)/$@.out $(LIB) -lm
+	$(CC) $^ -o $(BIN_DIR)/$@.out $(LIB)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
@@ -42,7 +42,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 test: $(TEST_EXE)
 
 $(TEST_EXE): $(TEST_OBJ) $(OBJ_WITHOUT_MAIN_PY)
-	$(CC) $^ -o $(TEST_BIN_DIR)/$@.out $(TEST_LIB) $(LIB) -lm
+	$(CC) $^ -o $(TEST_BIN_DIR)/$@.out $(TEST_LIB) $(LIB)
 
 $(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.c
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) $(INC) $(INC_TEST) -c $< -o $@

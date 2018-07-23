@@ -1,20 +1,83 @@
 #ifndef __DIFFUSION_C
 #define __DIFFUSION_C
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <png.h>
 
 #include "diffusion.h"
 
+int width, height;
+png_byte color_type;
+png_byte bit_depth;
+png_bytep *row_pointers;
+
+void read_png_file(char *filename, int *n_x_ptr, int *n_y_ptr) {
+    FILE *fp = fopen(filename, "rb");
+
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if(!png) abort();
+
+    png_infop info = png_create_info_struct(png);
+    if(!info) abort();
+
+    if(setjmp(png_jmpbuf(png))) abort();
+
+    png_init_io(png, fp);
+
+    png_read_info(png, info);
+
+    width      = png_get_image_width(png, info);
+    height     = png_get_image_height(png, info);
+    color_type = png_get_color_type(png, info);
+    bit_depth  = png_get_bit_depth(png, info);
+
+    if(bit_depth == 16)
+        png_set_strip_16(png);
+
+    if(color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_palette_to_rgb(png);
+
+    if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+        png_set_expand_gray_1_2_4_to_8(png);
+
+    if(png_get_valid(png, info, PNG_INFO_tRNS))
+        png_set_tRNS_to_alpha(png);
+
+    if(color_type == PNG_COLOR_TYPE_RGB ||
+       color_type == PNG_COLOR_TYPE_GRAY ||
+       color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_filler(png, 0xFF, PNG_FILLER_AFTER);
+
+    if(color_type == PNG_COLOR_TYPE_GRAY ||
+       color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+       png_set_gray_to_rgb(png);
+
+    png_read_update_info(png, info);
+
+    row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+    for(int y = 0; y < height; y++) {
+        row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
+    }
+
+    png_read_image(png, row_pointers);
+
+    *n_x_ptr = width;
+    *n_y_ptr = height;
+
+    fclose(fp);
+}
+
 void compute_mesh(struct Point points[], int n_x, int n_y,
-                  double width, double height, double delta_x, double delta_y)
+                  double delta_x, double delta_y)
 {
-    int global;
-    for (int j = 0; j < n_x; j++) {
-        for (int i = 0; i < n_y; i++) {
-            global = i + j * n_x;
-            points[global].x = i * delta_x;
-            points[global].y = j * delta_y;
+    int center;
+    for (int j = 0; j < n_y; j++) {
+        for (int i = 0; i < n_x; i++) {
+            center = i + j * n_x;
+            points[center].x = i * delta_x;
+            points[center].y = j * delta_y;
         }
     }
 }
@@ -25,11 +88,24 @@ void set_diffusivities(struct Point points[], int n_x, int n_y,
 {
     int center;
 
-    for (int j = 0; j < n_x; j++) {
-        for (int i = 0; i < n_y; i++) {
-            center = i + j * n_x;
+    // for (int j = 0; j < n_y; j++) {
+    //     for (int i = 0; i < n_x; i++) {
+    //         center = i + j * n_x;
+    //
+    //         if (i < i_1 || i > i_2 || j < j_1 || j > j_2)
+    //             points[center].diffusivity = diffus_1;
+    //         else
+    //             points[center].diffusivity = diffus_2;
+    //     }
+    // }
 
-            if (i < i_1 || i > i_2 || j < j_1 || j > j_2)
+    for(int y = 0; y < height; y++) {
+        png_bytep row = row_pointers[y];
+        for(int x = 0; x < width; x++) {
+            center = x + y * width;
+            png_bytep px = &(row[x * 4]);
+            // printf("%4d, %4d = %3d\n", x, y, px[0]);
+            if (px[0])
                 points[center].diffusivity = diffus_1;
             else
                 points[center].diffusivity = diffus_2;
@@ -46,8 +122,7 @@ void init_temperatures(struct Point points[], int points_length, double temp)
     }
 }
 
-double compute_step(struct Point points[], int n_x, int n_y,
-                    double width, double height, double timestep,
+double compute_step(struct Point points[], int n_x, int n_y, double timestep,
                     double delta_x, double delta_y)
 {
     int center, east, west, north, south;
@@ -56,8 +131,8 @@ double compute_step(struct Point points[], int n_x, int n_y,
     double max_res = 0.0;
     double rhs[n_x * n_y];
 
-    for (int j = 1; j < n_x - 1; j++) {
-        for (int i = 1; i < n_y - 1; i++) {
+    for (int j = 1; j < n_y - 1; j++) {
+        for (int i = 1; i < n_x - 1; i++) {
             center = i + j * n_x;
             east = (i + 1) + j * n_x;
             west = (i - 1) + j * n_x;
@@ -87,8 +162,8 @@ double compute_step(struct Point points[], int n_x, int n_y,
         }
     }
 
-    for (int j = 1; j < n_x - 1; j++) {
-        for (int i = 1; i < n_y - 1; i++) {
+    for (int j = 1; j < n_y - 1; j++) {
+        for (int i = 1; i < n_x - 1; i++) {
             center = i + j * n_x;
 
             points[center].temperature += rhs[center];
@@ -126,7 +201,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     if (print)
         printf("Delta time = %.10e\n", timestep);
 
-    compute_mesh(points, n_x, n_y, side_size, side_size, d_x, d_y);
+    compute_mesh(points, n_x, n_y, d_x, d_y);
     set_diffusivities(points, n_x, n_y, diff_1, diff_2, i_1, i_2, j_1, j_2);
     init_temperatures(points, length, initial_temp);
 
@@ -134,8 +209,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
 
     while (iter < (total_time / timestep)) {
         iter++;
-        res = compute_step(points, n_x, n_y, side_size, side_size,
-                           timestep, d_x, d_y);
+        res = compute_step(points, n_x, n_y, timestep, d_x, d_y);
 
         if (print && (iter % 1000 == 0))
                 printf("Residual = %.10e, Number of iterations = %d\n",
