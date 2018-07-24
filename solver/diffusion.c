@@ -83,32 +83,21 @@ void compute_mesh(struct Point points[], int n_x, int n_y,
 }
 
 void set_diffusivities(struct Point points[], int n_x, int n_y,
-                       double diffus_1, double diffus_2,
-                       int i_1, int i_2, int j_1, int j_2)
+                       double diffus_1, double diffus_2, double diffus_3)
 {
     int center;
-
-    // for (int j = 0; j < n_y; j++) {
-    //     for (int i = 0; i < n_x; i++) {
-    //         center = i + j * n_x;
-    //
-    //         if (i < i_1 || i > i_2 || j < j_1 || j > j_2)
-    //             points[center].diffusivity = diffus_1;
-    //         else
-    //             points[center].diffusivity = diffus_2;
-    //     }
-    // }
 
     for(int y = 0; y < height; y++) {
         png_bytep row = row_pointers[y];
         for(int x = 0; x < width; x++) {
             center = x + y * width;
             png_bytep px = &(row[x * 4]);
-            // printf("%4d, %4d = %3d\n", x, y, px[0]);
-            if (px[0])
+            if (px[0] == 255)
                 points[center].diffusivity = diffus_1;
-            else
+            else if (px[0] == 0)
                 points[center].diffusivity = diffus_2;
+            else
+                points[center].diffusivity = diffus_3;
         }
     }
 }
@@ -177,8 +166,7 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double total_time, double initial_temp,
                     int i_bc, int j_bc, double source_val,
-                    double diff_1, double diff_2,
-                    int i_1, int i_2, int j_1, int j_2)
+                    double diff_1, double diff_2, double diff_3)
 {
     double res = 10.0;
     int iter = 0, length = n_x * n_y;
@@ -186,6 +174,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     double delta_space, timestep, side_size, max_diff;
 
     max_diff = diff_1 > diff_2 ? diff_1 : diff_2;
+    max_diff = diff_3 > max_diff ? diff_3 : max_diff;
     side_size = sqrt(2 * max_diff * total_time);
 
     if (print)
@@ -202,7 +191,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
         printf("Delta time = %.10e\n", timestep);
 
     compute_mesh(points, n_x, n_y, d_x, d_y);
-    set_diffusivities(points, n_x, n_y, diff_1, diff_2, i_1, i_2, j_1, j_2);
+    set_diffusivities(points, n_x, n_y, diff_1, diff_2, diff_3);
     init_temperatures(points, length, initial_temp);
 
     points[i_bc + j_bc * n_x].source = source_val;
@@ -215,17 +204,18 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                 printf("Residual = %.10e, Number of iterations = %d\n",
                         res, iter);
 
-        // if (iter % 10000 == 0) {
-        //     write_vtk(points, n_x, n_y, iter / 10000);
-        //     write_res_vtk(points, n_x, n_y, iter / 10000);
-        // }
+        int plot_every = 2500;
+        if (iter % plot_every == 0) {
+            write_vtk(points, n_x, n_y, iter / plot_every);
+            // write_res_vtk(points, n_x, n_y, iter / plot_every);
+        }
     }
 
     if (print)
         printf("Residual = %.10e, Number of iterations = %d\n", res, iter);
 
     write_vtk(points, n_x, n_y, 0);
-    write_res_vtk(points, n_x, n_y, 0);
+    // write_res_vtk(points, n_x, n_y, 0);
 
     return iter;
 }
