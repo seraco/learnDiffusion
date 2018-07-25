@@ -4,33 +4,20 @@ import cv2
 import numpy as np
 
 img = cv2.imread('../segmentation_bw_original.png', 0)
+print cv2.__version__
 print type(img), img.shape
 
-# img = img / 255
-# print img.tolist()
+kernel = np.ones((3, 3), np.uint8)
+erosion = cv2.erode(img, kernel, iterations = 1)
 
-it =  np.nditer(img, op_flags=['readwrite'], order='C')
+membrane = cv2.bitwise_xor(img, erosion)
+# cells = cv2.bitwise_and(img, erosion)
 
-prev = 127
-while not it.finished:
-    dif = abs(prev - it[0])
-    if dif == 255 or dif == 1:
-        it[0] = 127
-    prev = it[0]
-    it.iternext()
+membrane /= 2
+out = membrane + erosion
 
-it =  np.nditer(img, op_flags=['readwrite'], order='F')
+cv2.imwrite('../segmentation_bw_new.png', out)
 
-prev = 127
-while not it.finished:
-    dif = abs(prev - it[0])
-    if dif == 255 or dif == 1:
-        it[0] = 127
-    prev = it[0]
-    it.iternext()
-
-cv2.imwrite('../segmentation_bw_new.png', img)
-
-# cv2.imshow('image', img)
+# cv2.imshow('image', erosion)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
