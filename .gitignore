@@ -116,3 +116,6 @@ venv.bak/
 
 # VTK solution files
 *.vtk
+
+# Data
+/data/*

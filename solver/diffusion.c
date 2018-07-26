@@ -204,11 +204,11 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                 printf("Residual = %.10e, Number of iterations = %d\n",
                         res, iter);
 
-        int plot_every = 2500;
-        if (iter % plot_every == 0) {
-            write_vtk(points, n_x, n_y, iter / plot_every);
-            // write_res_vtk(points, n_x, n_y, iter / plot_every);
-        }
+        // int plot_every = 2500;
+        // if (iter % plot_every == 0) {
+        //     write_vtk(points, n_x, n_y, iter / plot_every);
+        //     // write_res_vtk(points, n_x, n_y, iter / plot_every);
+        // }
     }
 
     if (print)
