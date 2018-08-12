@@ -111,6 +111,17 @@ void init_temperatures(struct Point points[], int points_length, double temp)
     }
 }
 
+double calculate_sum(struct Point points[], int points_length)
+{
+    double sum = 0.0;
+
+    for (int k = 0; k < points_length; k++) {
+        sum += points[k].temperature;
+    }
+
+    return sum;
+}
+
 double compute_step(struct Point points[], int n_x, int n_y, double timestep,
                     double delta_x, double delta_y)
 {
@@ -194,6 +205,19 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
         points[center].temperature = points[west].temperature;
     }
 
+    center = 0 + 0 * n_x;
+    east = 1 + 0 * n_x;
+    points[center].temperature = points[east].temperature;
+    center = (n_x - 1) + 0 * n_x;
+    west = ((n_x - 1) - 1) + 0 * n_x;
+    points[center].temperature = points[west].temperature;
+    center = 0 + (n_y - 1) * n_x;
+    east = 1 + (n_y - 1) * n_x;
+    points[center].temperature = points[east].temperature;
+    center = (n_x - 1) + (n_y - 1) * n_x;
+    west = ((n_x - 1) - 1) + (n_y - 1) * n_x;
+    points[center].temperature = points[west].temperature;
+
     return max_res;
 }
 
@@ -202,20 +226,26 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     int i_bc, int j_bc, double source_val,
                     double diff_1, double diff_2, double diff_3)
 {
-    double res = 10.0;
+    double res = 10.0, sum;
     int iter = 0, length = n_x * n_y;
     double d_x, d_y;
-    double delta_space, timestep, side_size, max_diff;
+    double delta_space, timestep, max_diff;
+    double x_side_size, y_side_size;
+    double current_time = 0.0;
 
     max_diff = diff_1 > diff_2 ? diff_1 : diff_2;
     max_diff = diff_3 > max_diff ? diff_3 : max_diff;
-    side_size = sqrt(2 * max_diff * total_time);
+    // x_side_size = sqrt(2 * max_diff * total_time);
+    // y_side_size = x_side_size;
+    x_side_size = 7.7e-3;
+    y_side_size = x_side_size;
 
     if (print)
-        printf("Side size = %.10e\n", side_size);
+        printf("X side size = %.10e, Y side size = %.10e\n",
+                x_side_size, y_side_size);
 
-    d_x = side_size / (n_x - 1);
-    d_y = side_size / (n_y - 1);
+    d_x = x_side_size / (n_x - 1);
+    d_y = y_side_size / (n_y - 1);
 
     delta_space = d_x < d_y ? d_x : d_y;
     timestep = 0.25 * delta_space * delta_space / max_diff;
@@ -228,28 +258,37 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     set_diffusivities(points, n_x, n_y, diff_1, diff_2, diff_3);
     init_temperatures(points, length, initial_temp);
 
+    i_bc = n_x / 4;
+    j_bc = n_y / 2;
     // points[i_bc + j_bc * n_x].source = source_val;
     points[i_bc + j_bc * n_x].temperature = source_val;
 
     while (iter < (total_time / timestep)) {
         iter++;
+        current_time += timestep;
         res = compute_step(points, n_x, n_y, timestep, d_x, d_y);
+        sum = calculate_sum(points, length);
 
-        if (print && (iter % 1000 == 0))
-                printf("Residual = %.10e, Number of iterations = %d\n",
-                        res, iter);
+        double tmp_time = current_time / 0.01;
+        double difference = tmp_time - floor(tmp_time);
+        double factor_to_compare = 100.0;
 
-        // int plot_every = 2500;
-        // if (iter % plot_every == 0) {
-        //     write_vtk(points, n_x, n_y, iter / plot_every);
-        //     // write_res_vtk(points, n_x, n_y, iter / plot_every);
-        // }
+        if (print && difference < timestep * factor_to_compare)
+                printf("Res = %.5e, Sum = %.5e, Iter = %d, Time = %.5e, Fname = %d\n",
+                        res, sum, iter, current_time,
+                        (int) (current_time * factor_to_compare));
+
+        if (difference < timestep * factor_to_compare) {
+            write_vtk(points, n_x, n_y, (int) (current_time * factor_to_compare));
+            // write_res_vtk(points, n_x, n_y, (int) (current_time * factor_to_compare));
+        }
     }
 
-    if (print)
-        printf("Residual = %.10e, Number of iterations = %d\n", res, iter);
+    // if (print)
+    //     printf("Res = %.5e, Sum = %.5e, Iter = %d, Time = %.5e\n",
+    //             res, sum, iter, current_time);
 
-    write_vtk(points, n_x, n_y, 0);
+    // write_vtk(points, n_x, n_y, 0);
     // write_res_vtk(points, n_x, n_y, 0);
 
     return iter;
