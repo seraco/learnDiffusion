@@ -235,10 +235,10 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
 
     max_diff = diff_1 > diff_2 ? diff_1 : diff_2;
     max_diff = diff_3 > max_diff ? diff_3 : max_diff;
-    // x_side_size = sqrt(2 * max_diff * total_time);
-    // y_side_size = x_side_size;
-    x_side_size = 7.7e-3;
+    x_side_size = sqrt(2 * max_diff * total_time);
     y_side_size = x_side_size;
+    // x_side_size = 7.7e-3;
+    // y_side_size = x_side_size;
 
     if (print)
         printf("X side size = %.10e, Y side size = %.10e\n",
@@ -263,6 +263,8 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     // points[i_bc + j_bc * n_x].source = source_val;
     points[i_bc + j_bc * n_x].temperature = source_val;
 
+    write_vtk(points, n_x, n_y, 0);
+
     while (iter < (total_time / timestep)) {
         iter++;
         current_time += timestep;
@@ -274,7 +276,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
         double factor_to_compare = 100.0;
 
         if (print && difference < timestep * factor_to_compare)
-                printf("Res = %.5e, Sum = %.5e, Iter = %d, Time = %.5e, Fname = %d\n",
+                printf("Res = %.4e, Sum = %.4e, Iter = %d, Time = %.4e, Fname = %d\n",
                         res, sum, iter, current_time,
                         (int) (current_time * factor_to_compare));
 
@@ -285,7 +287,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     }
 
     // if (print)
-    //     printf("Res = %.5e, Sum = %.5e, Iter = %d, Time = %.5e\n",
+    //     printf("Res = %.4e, Sum = %.4e, Iter = %d, Time = %.4e\n",
     //             res, sum, iter, current_time);
 
     // write_vtk(points, n_x, n_y, 0);
