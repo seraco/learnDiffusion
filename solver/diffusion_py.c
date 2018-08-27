@@ -11,14 +11,93 @@ const double DIFF_3 = 1.5e-10;
 
 static PyObject *solver(PyObject *self, PyObject *args);
 
-static PyMethodDef FooMethods[] = {
-    {"solve",  solver, METH_VARARGS},
-    {NULL, NULL}  /* Sentinel */
+struct module_state {
+    PyObject *error;
 };
 
-void initdiffusion(void)
+////////////////////////////////////////////////////////////////////////////////
+// IF
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+#endif
+// ENDIF
+////////////////////////////////////////////////////////////////////////////////
+
+static PyMethodDef diffusion_methods[] = {
+    {"solve",  solver, METH_VARARGS},
+    {NULL, NULL}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// IF
+#if PY_MAJOR_VERSION >= 3
+
+static int diffusion_traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int diffusion_clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "diffusion",
+        NULL,
+        sizeof(struct module_state),
+        diffusion_methods,
+        NULL,
+        diffusion_traverse,
+        diffusion_clear,
+        NULL
+};
+
+#define INITERROR return NULL
+
+PyMODINIT_FUNC
+PyInit_diffusion(void)
+
+#else
+#define INITERROR return
+
+void
+initdiffusion(void)
+#endif
+// ENDIF
+////////////////////////////////////////////////////////////////////////////////
 {
-    (void) Py_InitModule("diffusion", FooMethods);
+////////////////////////////////////////////////////////////////////////////////
+// IF
+#if PY_MAJOR_VERSION >= 3
+    PyObject *module = PyModule_Create(&moduledef);
+#else
+    PyObject *module = Py_InitModule("diffusion", diffusion_methods);
+#endif
+// ENDIF
+////////////////////////////////////////////////////////////////////////////////
+
+    if (module == NULL)
+        INITERROR;
+    struct module_state *st = GETSTATE(module);
+
+    st->error = PyErr_NewException("diffusion.Error", NULL, NULL);
+    if (st->error == NULL) {
+        Py_DECREF(module);
+        INITERROR;
+    }
+
+////////////////////////////////////////////////////////////////////////////////
+// IF
+#if PY_MAJOR_VERSION >= 3
+    return module;
+#endif
+// ENDIF
+////////////////////////////////////////////////////////////////////////////////
 }
 
 static PyObject *solver(PyObject *self, PyObject *args)

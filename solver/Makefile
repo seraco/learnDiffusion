@@ -60,7 +60,7 @@ debug: $(EXE)
 
 .PHONY: python
 python:
-	python setup.py install_lib
+	python3 setup.py install_lib
 
 .PHONY: clean
 clean:
