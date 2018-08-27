@@ -119,3 +119,9 @@ venv.bak/
 
 # Data
 /data/*
+
+# Solution
+/sol/*
+
+# Images
+/img/*

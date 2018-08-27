@@ -11,16 +11,16 @@ int main()
 {
     int n_x, n_y;
 
-    read_png_file("../segmentation_bw.png", &n_x, &n_y);
+    read_png_file("../img/segmentation_bw.png", &n_x, &n_y);
 
     int length = n_x * n_y;
     struct Point *points = (struct Point*)malloc(sizeof(struct Point) * length);
     double total_time = 1.0;
-    double init_temp = 0.0, source = 1.0; // source val of 1e5
+    double init_val = 0.0, source = 1.0; // source val of 1e5
     double diff_1 = 1.5e-9, diff_2 = 3e-9, diff_3 = 1.5e-10;
 
     solve_diffusion(1, points, n_x, n_y, total_time,
-                    init_temp, 0, 0, source,
+                    init_val, 0.25, 0.5, source,
                     diff_1, diff_2, diff_3);
 
     return EXIT_SUCCESS;
