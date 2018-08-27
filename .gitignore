@@ -121,4 +121,4 @@ venv.bak/
 /data/*
 
 # Images
-.png
+*.png
