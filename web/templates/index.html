@@ -11,21 +11,21 @@
 <body>
   {% if name %}
     <h1>Hello {{ name }}!</h1>
-    <form action="/solve">
-      <select id="img-selector" name="selected-img">
-        <option value="original"  selected="selected">Original</option>
-        <option value="small">Small</option>
-      </select>
-      <input type="submit" value="Submit">
-    </form>
+    <select id="img-selector" name="selected-img">
+      <option value="original"  selected="selected">Original</option>
+      <option value="small">Small</option>
+    </select>
+    <input id="submit-solution" type="submit" value="Submit">
     <img id="original" src="/static/img/original.png">
     <img id="small" src="/static/img/small.png">
+    <img id="solution" src="/static/img/img.png">
   {% else %}
     <h1>Hello, World!</h1>
   {% endif %}
   <script>
     $(document).ready(function(){
       $("#small").hide();
+      $("#solution").hide();
 
       $("#img-selector").change(function() {
         if (this.value == "original") {
@@ -35,6 +35,13 @@
           $("#original").hide();
           $("#small").show();
         }
+      });
+
+      $("#submit-solution").click(function() {
+        $.get("solve", function(data) {
+          $("#solution").show();
+          // console.log(data);
+        });
       });
     });
   </script>

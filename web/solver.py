@@ -39,10 +39,18 @@ def solve():
     c = c.reshape(dim[0:2], order='F')
 
     fig = Figure()
-    axis = fig.add_subplot(1, 1, 1)
+    axis = fig.add_subplot(111)
 
+    # TODO: Set equal aspect ratio axes
+    # axis.set_aspect('equal')
     axis.contourf(x, y, c)
     canvas = FigureCanvas(fig)
     output = io.BytesIO()
     canvas.print_png(output)
+    fig.savefig('./static/img/img.png')
     return output
+
+def force_aspect(ax,aspect=1):
+    im = ax.get_images()
+    extent =  im[0].get_extent()
+    ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
