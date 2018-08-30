@@ -232,6 +232,16 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     return max_res;
 }
 
+void gaussian_analytical(struct Point points[], int length, double current_time,
+                         double diff)
+{
+    for (int k = 0; k < length; k++) {
+      double r_sqr = points[k].x * points[k].x + points[k].y * points[k].y;
+      points[k].analytical_value = exp(-r_sqr / 4 / diff / current_time);
+      points[k].analytical_value /= (4 * M_PI * current_time * diff);
+    }
+}
+
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double total_time, double initial_val,
                     double x_perc_bc, double y_perc_bc, double source_val,
@@ -277,6 +287,8 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     internal_conditions(points, length, x_bc, y_bc, source_val, max_size);
 
     write_vtk(points, n_x, n_y, 0);
+    gaussian_analytical(points, length, current_time, max_diff);
+    write_vtk_anal(points, n_x, n_y, 0);
 
     double plot_every = 1e-4;
     double factor_to_compare = 1.0 / plot_every;
@@ -298,6 +310,8 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
         if (difference < timestep * factor_to_compare) {
             write_vtk(points, n_x, n_y, (int) (current_time * factor_to_compare));
             // write_res_vtk(points, n_x, n_y, (int) (current_time * factor_to_compare));
+            gaussian_analytical(points, length, current_time, max_diff);
+            write_vtk_anal(points, n_x, n_y, (int) (current_time * factor_to_compare));
         }
     }
 
@@ -334,6 +348,42 @@ void write_vtk(struct Point points[], int n_x, int n_y, int iter_number)
     for (int k = 0; k < length; k++) {
         double val;
         val = points[k].value;
+        fprintf(f_ptr, "%.10e\n", val);
+    }
+
+    fclose(f_ptr);
+}
+
+void write_vtk_anal(struct Point points[], int n_x, int n_y, int iter_number)
+{
+    FILE *f_ptr;
+    int length = n_x * n_y;
+    char buffer[256];
+
+    sprintf(buffer, "../sol/analytical%d.vtk", iter_number);
+
+    f_ptr = fopen(buffer, "w");
+    fprintf(f_ptr, "# vtk DataFile Version 2.0\n");
+    fprintf(f_ptr, "Diffusion solution\n");
+    fprintf(f_ptr, "ASCII\n");
+    fprintf(f_ptr, "DATASET STRUCTURED_GRID\n");
+    fprintf(f_ptr, "DIMENSIONS %d %d 1\n", n_x, n_y);
+    fprintf(f_ptr, "POINTS %d double\n", length);
+
+    for (int k = 0; k < length; k++) {
+        double x, y;
+        x = points[k].x;
+        y = points[k].y;
+        fprintf(f_ptr, "%.10e %.10e 0.0\n", x, y);
+    }
+
+    fprintf(f_ptr, "POINT_DATA %d\n", length);
+    fprintf(f_ptr, "FIELD FieldData 1\n");
+    fprintf(f_ptr, "Anal 1 %d double\n", length);
+
+    for (int k = 0; k < length; k++) {
+        double val;
+        val = points[k].analytical_value;
         fprintf(f_ptr, "%.10e\n", val);
     }
 
