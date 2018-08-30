@@ -250,27 +250,21 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     // y_side_size = x_side_size;
     x_side_size = 7.75e-05;
     y_side_size = x_side_size * 3.0 / 200.0;
+    d_x = x_side_size / (n_x - 1);
+    d_y = y_side_size / (n_y - 1);
+    delta_space = d_x < d_y ? d_x : d_y;
+    timestep = 0.25 * delta_space * delta_space / max_diff;
+    timestep *= 0.98;
 
     if (print) {
         printf("X number nodes = %d, Y number nodes = %d\n",
                 n_x, n_y);
         printf("X side size = %.10e, Y side size = %.10e\n",
                 x_side_size, y_side_size);
-    }
-
-    d_x = x_side_size / (n_x - 1);
-    d_y = y_side_size / (n_y - 1);
-
-    if (print)
         printf("Delta X = %.10e, Delta Y = %.10e\n",
                 d_x, d_y);
-
-    delta_space = d_x < d_y ? d_x : d_y;
-    timestep = 0.25 * delta_space * delta_space / max_diff;
-    timestep *= 0.98;
-
-    if (print)
         printf("Delta time = %.10e\n", timestep);
+    }
 
     compute_mesh(points, n_x, n_y, d_x, d_y);
     set_diffusivities(points, n_x, n_y, diff_1, diff_2, diff_3);
@@ -284,15 +278,17 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
 
     write_vtk(points, n_x, n_y, 0);
 
+    double plot_every = 1e-4;
+    double factor_to_compare = 1.0 / plot_every;
+
     while (iter < (total_time / timestep)) {
         iter++;
         current_time += timestep;
         res = compute_step(points, n_x, n_y, timestep, d_x, d_y);
         sum = calculate_sum(points, length);
 
-        double tmp_time = current_time / 0.01;
+        double tmp_time = current_time / plot_every;
         double difference = tmp_time - floor(tmp_time);
-        double factor_to_compare = 100.0;
 
         if (print && difference < timestep * factor_to_compare)
                 printf("Res = %.4e, Sum = %.4e, Iter = %d, Time = %.4e, Fname = %d\n",
@@ -304,13 +300,6 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
             // write_res_vtk(points, n_x, n_y, (int) (current_time * factor_to_compare));
         }
     }
-
-    // if (print)
-    //     printf("Res = %.4e, Sum = %.4e, Iter = %d, Time = %.4e\n",
-    //             res, sum, iter, current_time);
-
-    // write_vtk(points, n_x, n_y, 0);
-    // write_res_vtk(points, n_x, n_y, 0);
 
     return iter;
 }
