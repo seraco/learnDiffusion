@@ -194,7 +194,7 @@ double implicit_rhs(struct Point points[], int center, int east, int west,
 }
 
 double compute_step(struct Point points[], int n_x, int n_y, double timestep,
-                    double delta_x, double delta_y, int shifter)
+                    double delta_x, double delta_y, int shifter, int hopscotch)
 {
     int center, east, west, north, south;
     double rhs_term;
@@ -204,7 +204,7 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     for (int j = 1; j < n_y - 1; j++) {
         for (int i = 1; i < n_x - 1; i++) {
             center = i + j * n_x;
-            if (center % 2 == shifter)
+            if (hopscotch && center % 2 == shifter)
                 continue;
             east = (i + 1) + j * n_x, west = (i - 1) + j * n_x;
             north = i + (j + 1) * n_x, south = i + (j - 1) * n_x;
@@ -222,38 +222,40 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     for (int j = 1; j < n_y - 1; j++) {
         for (int i = 1; i < n_x - 1; i++) {
             center = i + j * n_x;
-            if (center % 2 == shifter)
+            if (hopscotch && center % 2 == shifter)
                 continue;
             points[center].value += rhs[center];
             points[center].residual = fabs(rhs[center]);
         }
     }
 
-    for (int j = 1; j < n_y - 1; j++) {
-        for (int i = 1; i < n_x - 1; i++) {
-            center = i + j * n_x;
-            if (center % 2 != shifter)
-                continue;
-            east = (i + 1) + j * n_x, west = (i - 1) + j * n_x;
-            north = i + (j + 1) * n_x, south = i + (j - 1) * n_x;
+    if (hopscotch) {
+        for (int j = 1; j < n_y - 1; j++) {
+            for (int i = 1; i < n_x - 1; i++) {
+                center = i + j * n_x;
+                if (center % 2 != shifter)
+                    continue;
+                east = (i + 1) + j * n_x, west = (i - 1) + j * n_x;
+                north = i + (j + 1) * n_x, south = i + (j - 1) * n_x;
 
-            rhs_term = implicit_rhs(points, center, east, west, north, south,
-                                    timestep, delta_x, delta_y);
+                rhs_term = implicit_rhs(points, center, east, west, north, south,
+                                        timestep, delta_x, delta_y);
 
-            if (fabs(rhs_term) > max_res)
-                max_res = fabs(rhs_term);
+                if (fabs(rhs_term) > max_res)
+                    max_res = fabs(rhs_term);
 
-            rhs[center] = rhs_term;
+                rhs[center] = rhs_term;
+            }
         }
-    }
 
-    for (int j = 1; j < n_y - 1; j++) {
-        for (int i = 1; i < n_x - 1; i++) {
-            center = i + j * n_x;
-            if (center % 2 != shifter)
-                continue;
-            points[center].value += rhs[center];
-            points[center].residual = fabs(rhs[center]);
+        for (int j = 1; j < n_y - 1; j++) {
+            for (int i = 1; i < n_x - 1; i++) {
+                center = i + j * n_x;
+                if (center % 2 != shifter)
+                    continue;
+                points[center].value += rhs[center];
+                points[center].residual = fabs(rhs[center]);
+            }
         }
     }
 
@@ -366,23 +368,25 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     double plot_every = 1e-4;
     double factor_to_compare = 1.0 / plot_every;
 
-    int shifter = 0;
+    int shifter = 0, hops = 1;
     double app_diff;
 
     while (iter < (total_time / timestep)) {
         iter++;
         current_time += timestep;
         shifter = !shifter;
-        res = compute_step(points, n_x, n_y, timestep, d_x, d_y, shifter);
+        res = compute_step(points, n_x, n_y, timestep, d_x, d_y, shifter, hops);
         sum = calculate_sum(points, length);
         app_diff = apparent_diffusion(points, length, x_bc, y_bc, total_time);
 
         double tmp_time = current_time / plot_every;
         double difference = tmp_time - floor(tmp_time);
 
-        if (print && difference < timestep * factor_to_compare)
-                printf("Res = %.4e, Sum = %.4e, Iter = %d, Time = %.4e, ADC = %.4e, Fname = %d\n",
-                        res, sum, iter, current_time, app_diff, f_name);
+        if (print && difference < timestep * factor_to_compare) {
+                printf("Res = %.4e, Sum = %.4e, Iter = %d, ", res, sum, iter);
+                printf("Time = %.4e, ADC = %.4e, Fname = %d\n",
+                       current_time, app_diff, f_name);
+        }
 
         if (difference < timestep * factor_to_compare) {
             write_vtk(points, n_x, n_y, f_name);

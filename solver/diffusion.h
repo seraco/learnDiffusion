@@ -29,7 +29,7 @@ double implicit_rhs(struct Point points[], int center, int east, int west,
                     int north, int south, double timestep,
                     double delta_x, double delta_y);
 double compute_step(struct Point points[], int n_x, int n_y, double timestep,
-                    double delta_x, double delta_y, int shifter);
+                    double delta_x, double delta_y, int shifter, int hopscotch);
 void gaussian_analytical(struct Point points[], int length, double current_time,
                          double diff, double x_bc, double y_bc);
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
