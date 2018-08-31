@@ -20,6 +20,14 @@ void internal_conditions(struct Point points[], int points_length,
                          double x_bc, double y_bc, double source_val,
                          double size);
 double calculate_sum(struct Point points[], int points_length);
+double apparent_diffusion(struct Point points[], int points_length,
+                          double x_bc, double y_bc, double total_time);
+double explicit_rhs(struct Point points[], int center, int east, int west,
+                    int north, int south, double timestep,
+                    double delta_x, double delta_y);
+double implicit_rhs(struct Point points[], int center, int east, int west,
+                    int north, int south, double timestep,
+                    double delta_x, double delta_y);
 double compute_step(struct Point points[], int n_x, int n_y, double timestep,
                     double delta_x, double delta_y, int shifter);
 void gaussian_analytical(struct Point points[], int length, double current_time,
