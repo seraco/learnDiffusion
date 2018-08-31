@@ -21,9 +21,9 @@ void internal_conditions(struct Point points[], int points_length,
                          double size);
 double calculate_sum(struct Point points[], int points_length);
 double compute_step(struct Point points[], int n_x, int n_y, double timestep,
-                    double delta_x, double delta_y);
+                    double delta_x, double delta_y, int shifter);
 void gaussian_analytical(struct Point points[], int length, double current_time,
-                         double diff);
+                         double diff, double x_bc, double y_bc);
 int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
                     double total_time, double initial_val,
                     double x_perc_bc, double y_perc_bc, double source_val,

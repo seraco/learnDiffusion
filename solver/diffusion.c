@@ -136,7 +136,7 @@ double calculate_sum(struct Point points[], int points_length)
 }
 
 double compute_step(struct Point points[], int n_x, int n_y, double timestep,
-                    double delta_x, double delta_y)
+                    double delta_x, double delta_y, int shifter)
 {
     int center, east, west, north, south;
     double x_y_term;
@@ -147,24 +147,27 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     for (int j = 1; j < n_y - 1; j++) {
         for (int i = 1; i < n_x - 1; i++) {
             center = i + j * n_x;
+            if (center % 2 == shifter)
+                continue;
             east = (i + 1) + j * n_x;
             west = (i - 1) + j * n_x;
             north = i + (j + 1) * n_x;
             south = i + (j - 1) * n_x;
 
-            x_term = points[east].diffusivity * (points[east].value
-                     - points[center].value);
-            x_term -= points[west].diffusivity * (points[center].value
-                      - points[west].value);
-            x_term = x_term / delta_x / delta_x;
+            double coef_east = points[east].diffusivity * timestep / delta_x / delta_x;
+            double coef_west = points[west].diffusivity * timestep / delta_x / delta_x;
+            double coef_north = points[north].diffusivity * timestep / delta_y / delta_y;
+            double coef_south = points[south].diffusivity * timestep / delta_y / delta_y;
 
-            y_term = points[north].diffusivity * (points[north].value
-                     - points[center].value);
-            y_term -= points[south].diffusivity * (points[center].value
-                      - points[south].value);
-            y_term = y_term / delta_y / delta_y;
+            x_term = (- coef_east - coef_west) * points[center].value;
+            x_term += coef_east * points[east].value;
+            x_term += coef_west * points[west].value;
 
-            x_y_term = timestep * (x_term + y_term + points[center].source);
+            y_term = (- coef_north - coef_south) * points[center].value;
+            y_term += coef_north * points[north].value;
+            y_term += coef_south * points[south].value;
+
+            x_y_term = x_term + y_term + timestep * points[center].source;
 
             if (fabs(x_y_term) > max_res)
                 max_res = fabs(x_y_term);
@@ -176,8 +179,58 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     for (int j = 1; j < n_y - 1; j++) {
         for (int i = 1; i < n_x - 1; i++) {
             center = i + j * n_x;
-
+            if (center % 2 == shifter)
+                continue;
             points[center].value += rhs[center];
+            points[center].residual = fabs(rhs[center]);
+        }
+    }
+
+    for (int j = 1; j < n_y - 1; j++) {
+        for (int i = 1; i < n_x - 1; i++) {
+            center = i + j * n_x;
+            if (center % 2 != shifter)
+                continue;
+            east = (i + 1) + j * n_x;
+            west = (i - 1) + j * n_x;
+            north = i + (j + 1) * n_x;
+            south = i + (j - 1) * n_x;
+
+            double coef_east = points[east].diffusivity * timestep / delta_x / delta_x;
+            double coef_west = points[west].diffusivity * timestep / delta_x / delta_x;
+            double coef_north = points[north].diffusivity * timestep / delta_y / delta_y;
+            double coef_south = points[south].diffusivity * timestep / delta_y / delta_y;
+
+            x_term = coef_east * points[east].value;
+            x_term += coef_west * points[west].value;
+
+            y_term = coef_north * points[north].value;
+            y_term += coef_south * points[south].value;
+
+            x_y_term = x_term + y_term + timestep * points[center].source;
+
+            if (fabs(x_y_term) > max_res)
+                max_res = fabs(x_y_term);
+
+            rhs[center] = x_y_term;
+        }
+    }
+
+    for (int j = 1; j < n_y - 1; j++) {
+        for (int i = 1; i < n_x - 1; i++) {
+            center = i + j * n_x;
+            if (center % 2 != shifter)
+                continue;
+            east = (i + 1) + j * n_x;
+            west = (i - 1) + j * n_x;
+            north = i + (j + 1) * n_x;
+            south = i + (j - 1) * n_x;
+            points[center].value = points[center].value + rhs[center];
+            double coef_east = points[east].diffusivity * timestep / delta_x / delta_x;
+            double coef_west = points[west].diffusivity * timestep / delta_x / delta_x;
+            double coef_north = points[north].diffusivity * timestep / delta_y / delta_y;
+            double coef_south = points[south].diffusivity * timestep / delta_y / delta_y;
+            points[center].value /= 1 + coef_east + coef_west + coef_north + coef_south;
             points[center].residual = fabs(rhs[center]);
         }
     }
@@ -185,9 +238,6 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     for (int i = 1; i < n_x - 1; i++) {
         center = i + 0 * n_x;
         north = i + (0 + 1) * n_x;
-        // printf("Center: %d (x: %f, y: %f), North: %d (x: %f, y: %f)\n",
-        //         center, points[center].x, points[center].y,
-        //         north, points[north].x, points[north].y);
 
         points[center].value = points[north].value;
     }
@@ -195,9 +245,6 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     for (int i = 1; i < n_x - 1; i++) {
         center = i + (n_y - 1) * n_x;
         south = i + ((n_y - 1) - 1) * n_x;
-        // printf("Center: %d (x: %f, y: %f), South: %d (x: %f, y: %f)\n",
-        //         center, points[center].x, points[center].y,
-        //         south, points[south].x, points[south].y);
 
         points[center].value = points[south].value;
     }
@@ -233,10 +280,12 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
 }
 
 void gaussian_analytical(struct Point points[], int length, double current_time,
-                         double diff)
+                         double diff, double x_bc, double y_bc)
 {
     for (int k = 0; k < length; k++) {
-      double r_sqr = points[k].x * points[k].x + points[k].y * points[k].y;
+      double x_shifted = points[k].x - x_bc;
+      double y_shifted = points[k].y - y_bc;
+      double r_sqr = x_shifted * x_shifted + y_shifted * y_shifted;
       points[k].analytical_value = exp(-r_sqr / 4 / diff / current_time);
       points[k].analytical_value /= (4 * M_PI * current_time * diff);
     }
@@ -287,16 +336,19 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     internal_conditions(points, length, x_bc, y_bc, source_val, max_size);
 
     write_vtk(points, n_x, n_y, 0);
-    gaussian_analytical(points, length, current_time, max_diff);
+    gaussian_analytical(points, length, current_time, max_diff, x_bc, y_bc);
     write_vtk_anal(points, n_x, n_y, 0);
 
     double plot_every = 1e-4;
     double factor_to_compare = 1.0 / plot_every;
 
+    int shifter = 0;
+
     while (iter < (total_time / timestep)) {
         iter++;
         current_time += timestep;
-        res = compute_step(points, n_x, n_y, timestep, d_x, d_y);
+        shifter = !shifter;
+        res = compute_step(points, n_x, n_y, timestep, d_x, d_y, shifter);
         sum = calculate_sum(points, length);
 
         double tmp_time = current_time / plot_every;
@@ -310,7 +362,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
         if (difference < timestep * factor_to_compare) {
             write_vtk(points, n_x, n_y, (int) (current_time * factor_to_compare));
             // write_res_vtk(points, n_x, n_y, (int) (current_time * factor_to_compare));
-            gaussian_analytical(points, length, current_time, max_diff);
+            gaussian_analytical(points, length, current_time, max_diff, x_bc, y_bc);
             write_vtk_anal(points, n_x, n_y, (int) (current_time * factor_to_compare));
         }
     }
