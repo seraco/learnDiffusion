@@ -15,7 +15,7 @@ int main()
 
     int length = n_x * n_y;
     struct Point *points = (struct Point*)malloc(sizeof(struct Point) * length);
-    double total_time = 0.1;
+    double total_time = 0.01;
     double init_val = 0.0, source = 1.0; // source val of 1e5
     double diff_1 = 1.5e-9, diff_2 = 3e-9, diff_3 = 1.5e-10;
 

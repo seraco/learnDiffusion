@@ -204,7 +204,10 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     for (int j = 1; j < n_y - 1; j++) {
         for (int i = 1; i < n_x - 1; i++) {
             center = i + j * n_x;
-            if (hopscotch && center % 2 == shifter)
+            int even_even = i % 2 == 0 && j % 2 == 0;
+            int odd_odd = i % 2 == 1 && j % 2 == 1;
+            int should_continue = even_even || odd_odd;
+            if (hopscotch && should_continue == shifter)
                 continue;
             east = (i + 1) + j * n_x, west = (i - 1) + j * n_x;
             north = i + (j + 1) * n_x, south = i + (j - 1) * n_x;
@@ -222,18 +225,27 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
     for (int j = 1; j < n_y - 1; j++) {
         for (int i = 1; i < n_x - 1; i++) {
             center = i + j * n_x;
-            if (hopscotch && center % 2 == shifter)
+            int even_even = i % 2 == 0 && j % 2 == 0;
+            int odd_odd = i % 2 == 1 && j % 2 == 1;
+            int should_continue = even_even || odd_odd;
+            if (hopscotch && should_continue == shifter)
                 continue;
+            // printf("%d ", center);
             points[center].value += rhs[center];
             points[center].residual = fabs(rhs[center]);
         }
     }
 
+    // printf("===============================================================\n");
+
     if (hopscotch) {
         for (int j = 1; j < n_y - 1; j++) {
             for (int i = 1; i < n_x - 1; i++) {
                 center = i + j * n_x;
-                if (center % 2 != shifter)
+                int even_even = i % 2 == 0 && j % 2 == 0;
+                int odd_odd = i % 2 == 1 && j % 2 == 1;
+                int should_continue = even_even || odd_odd;
+                if (should_continue != shifter)
                     continue;
                 east = (i + 1) + j * n_x, west = (i - 1) + j * n_x;
                 north = i + (j + 1) * n_x, south = i + (j - 1) * n_x;
@@ -251,12 +263,17 @@ double compute_step(struct Point points[], int n_x, int n_y, double timestep,
         for (int j = 1; j < n_y - 1; j++) {
             for (int i = 1; i < n_x - 1; i++) {
                 center = i + j * n_x;
-                if (center % 2 != shifter)
+                int even_even = i % 2 == 0 && j % 2 == 0;
+                int odd_odd = i % 2 == 1 && j % 2 == 1;
+                int should_continue = even_even || odd_odd;
+                if (should_continue != shifter)
                     continue;
+                // printf("%d ", center);
                 points[center].value += rhs[center];
                 points[center].residual = fabs(rhs[center]);
             }
         }
+        // printf("***************************************************************\n");
     }
 
     for (int i = 1; i < n_x - 1; i++) {
@@ -332,12 +349,14 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     // x_side_size = sqrt(2 * max_diff * total_time);
     // y_side_size = x_side_size;
     x_side_size = 7.75e-05;
-    y_side_size = x_side_size * 3.0 / 200.0;
+    y_side_size = x_side_size * 3.0 / 30.0;
     d_x = x_side_size / (n_x - 1);
     d_y = y_side_size / (n_y - 1);
     delta_space = d_x < d_y ? d_x : d_y;
     timestep = 0.25 * delta_space * delta_space / max_diff;
     timestep *= 0.98;
+    printf("Delta time theory = %.10e\n", (0.25 * delta_space * delta_space / max_diff));
+    timestep = 1e-4;
 
     if (print) {
         printf("X number nodes = %d, Y number nodes = %d\n",
@@ -361,8 +380,8 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
 
     int f_name = 0;
     write_vtk(points, n_x, n_y, f_name);
-    gaussian_analytical(points, length, current_time, max_diff, x_bc, y_bc);
-    write_vtk_anal(points, n_x, n_y, f_name);
+    // gaussian_analytical(points, length, current_time, max_diff, x_bc, y_bc);
+    // write_vtk_anal(points, n_x, n_y, f_name);
     f_name++;
 
     double plot_every = 1e-4;
@@ -391,8 +410,8 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
         if (difference < timestep * factor_to_compare) {
             write_vtk(points, n_x, n_y, f_name);
             // write_res_vtk(points, n_x, n_y, f_name);
-            gaussian_analytical(points, length, current_time, max_diff, x_bc, y_bc);
-            write_vtk_anal(points, n_x, n_y, f_name);
+            // gaussian_analytical(points, length, current_time, max_diff, x_bc, y_bc);
+            // write_vtk_anal(points, n_x, n_y, f_name);
             f_name++;
         }
     }
