@@ -15,12 +15,13 @@ int main()
 
     int length = n_x * n_y;
     struct Point *points = (struct Point*)malloc(sizeof(struct Point) * length);
-    double total_time = 0.01;
+    double total_time = 0.1;
     double init_val = 0.0, source = 1.0; // source val of 1e5
-    double diff_1 = 1.5e-9, diff_2 = 3e-9, diff_3 = 1.5e-10;
+    double diff_1 = 1.5e-9, diff_2 = 3e-9, diff_3 = 3e-9;
+    // double diff_1 = 1.5e-9, diff_2 = 3e-9, diff_3 = 1.5e-10;
 
     solve_diffusion(1, points, n_x, n_y, total_time,
-                    init_val, 0.25, 0.5, source,
+                    init_val, 0.5, 0.5, source,
                     diff_1, diff_2, diff_3);
 
     return EXIT_SUCCESS;

@@ -349,14 +349,14 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     // x_side_size = sqrt(2 * max_diff * total_time);
     // y_side_size = x_side_size;
     x_side_size = 7.75e-05;
-    y_side_size = x_side_size * 3.0 / 30.0;
+    y_side_size = x_side_size;
     d_x = x_side_size / (n_x - 1);
     d_y = y_side_size / (n_y - 1);
     delta_space = d_x < d_y ? d_x : d_y;
     timestep = 0.25 * delta_space * delta_space / max_diff;
     timestep *= 0.98;
-    printf("Delta time theory = %.10e\n", (0.25 * delta_space * delta_space / max_diff));
-    timestep = 1e-4;
+    // printf("Delta time theory = %.10e\n", timestep);
+    // timestep = 1e-8;
 
     if (print) {
         printf("X number nodes = %d, Y number nodes = %d\n",
@@ -387,7 +387,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     double plot_every = 1e-4;
     double factor_to_compare = 1.0 / plot_every;
 
-    int shifter = 0, hops = 1;
+    int shifter = 0, hops = 0;
     double app_diff;
 
     while (iter < (total_time / timestep)) {

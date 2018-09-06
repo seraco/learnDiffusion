@@ -3,7 +3,7 @@
 import cv2
 import numpy as np
 
-img = cv2.imread('../segmentation_bw_original.png', 0)
+img = cv2.imread('../img/segmentation_bw_original.png', 0)
 
 print type(img), img.shape
 
@@ -48,7 +48,7 @@ for j in range(len(img[0])):
             img[i][j] = 127
         prev = img[i][j]
 
-cv2.imwrite('../segmentation_bw_new.png', img)
+cv2.imwrite('../img/segmentation_bw_new.png', img)
 # cv2.imshow('image', img)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
