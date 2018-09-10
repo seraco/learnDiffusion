@@ -62,6 +62,10 @@ debug: $(EXE)
 python:
 	python3 setup.py install_lib
 
+.PHONY: python2
+python2:
+	python setup.py install_lib
+
 .PHONY: clean
 clean:
 	$(RM) $(OBJ)

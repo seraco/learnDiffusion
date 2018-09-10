@@ -3,21 +3,22 @@
 import cv2
 import numpy as np
 
-mult = 2
+mult = 5
 
-img = cv2.imread('../1.png', 0)
+img = cv2.imread('../img/diff_mem_background.png', 0)
 
 n_x = img.shape[1]
 n_y = img.shape[0]
 
-img_new = np.empty([n_y, n_x * mult])
+img_new = np.empty([n_y * mult, n_x * mult])
 
 print type(img), img.shape
 
 for i in range(n_x):
     for j in range(n_y):
-        for l in range(mult):
-            img_new[j][mult * i + l] = img[j][i]
+        for k in range(mult):
+            for l in range(mult):
+                img_new[mult * j + k][mult * i + l] = img[j][i]
 
 print type(img_new), img_new.shape
 

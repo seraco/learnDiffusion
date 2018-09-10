@@ -135,11 +135,11 @@ double apparent_diffusion(struct Point points[], int points_length,
         y_s *= y_s;
         d_r = sqrt(x_s + y_s);
         double conc = points[k].value * d_r;
-        conc *= conc;
         sum += conc;
     }
+    sum *= sum;
 
-    return sqrt(sum) / total_time / 4;
+    return sum / total_time / 4;
 }
 
 double calculate_sum(struct Point points[], int points_length)
@@ -356,7 +356,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     timestep = 0.25 * delta_space * delta_space / max_diff;
     timestep *= 0.98;
     // printf("Delta time theory = %.10e\n", timestep);
-    // timestep = 1e-8;
+    // timestep = 1e-2;
 
     if (print) {
         printf("X number nodes = %d, Y number nodes = %d\n",
@@ -384,7 +384,7 @@ int solve_diffusion(int print, struct Point points[], int n_x, int n_y,
     // write_vtk_anal(points, n_x, n_y, f_name);
     f_name++;
 
-    double plot_every = 1e-4;
+    double plot_every = 1e-3;
     double factor_to_compare = 1.0 / plot_every;
 
     int shifter = 0, hops = 0;
